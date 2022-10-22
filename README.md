@@ -35,7 +35,7 @@ Look at the `demo` folder in the GitHub Repository for an example.
 # Which parameters are available?
 
 You can pass a parameter to the KeyValueCache, which defines the key separator.  
-As the cache is based on a Map, the key separator is used to split every given array key in a single string.
+As the cache is based on a Map, the key separator is used to split every given array key in a single string to allow key matching.
 
 # How can I add an element to the cache?
 
@@ -88,6 +88,27 @@ cache.get("key"); // This will return undefined
 ```
 
 Remember to use the `invalidateByKey` method to increase the invalidation counter, while the `delete` method will delete the item from the cache independently from the defined threshold.
+
+# How can I define a dependency array for invalidation?
+
+You can simply pass a dependency array as the fourth parameter of the `exec` and `set` methods.  
+When the dependency array is defined, the item is invalidated when one of the dependencies is invalidated.
+
+```js
+const cache = new KeyValueCache();
+cache.set("key", "value", 1, ["dependency1", "dependency2"]); // This will store the value in the cache and set the threshold to 2
+cache.get("key"); // This will return the value
+cache.invalidateByKey("dependency1"); // This will invalidate the item as the dependency1 is in the dependency array.
+cache.get("key"); // This will return undefined
+```
+
+You can also set the dependency array using the `setDependencies` method.
+
+```js
+cache.setDependencies("key", ["dependency1", "dependency2"]); // This will set the dependency array for the key
+```
+
+This could be useful when you want to firstly execute the function and use the result to set the dependencies.
 
 # How can I remove an element from the cache?
 

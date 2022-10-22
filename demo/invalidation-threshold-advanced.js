@@ -10,15 +10,16 @@ cache.set(
   "USERS+PAYMENTS+ORDERS+ADDRESSES"
 );
 console.log("\n\n**********");
+console.log("Current entries:");
 console.log(cache.entries());
 
 console.log("\n\n**********");
-console.log("Removing users-addresses");
+console.log("Removing users-addresses:");
 cache.invalidateByKey("users-addresses");
 console.log(cache.entries());
 
 console.log("\n\n**********");
-console.log("Removing everything but users");
+console.log("Removing everything but users:");
 cache.invalidateByKey(/users\-.+/);
 console.log(cache.entries());
 
