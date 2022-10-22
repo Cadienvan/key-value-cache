@@ -23,11 +23,11 @@ kvCache.exec(() => {
 }, ["longRunningOperation"]);
 console.log("Post-cache: ", performance.now() - perfTime);
 perfTime = performance.now();
-kvCache.deleteByKey(/long.+/);
+kvCache.invalidateByKey(/long.+/);
 kvCache.exec(() => {
   return longRunningOperation();
 }, ["longRunningOperation"]);
-kvCache.deleteByKey(/long.+/);
+kvCache.invalidateByKey(/long.+/);
 kvCache.exec(() => {
   return longRunningOperation();
 }, ["longRunningOperation"]);

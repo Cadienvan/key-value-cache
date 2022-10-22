@@ -2,8 +2,14 @@ function isPromise(p: any): p is Promise<any> {
   return p && typeof p.then === "function";
 }
 
+interface CacheItem {
+  value: any;
+  threshold: number;
+  currentInvalidations: number;
+}
+
 export class KeyValueCache {
-  #appCache: Map<string, any>;
+  #appCache: Map<string, CacheItem>;
   keySeparator = "|||";
 
   constructor(keySeparator = "|||") {
@@ -19,7 +25,7 @@ export class KeyValueCache {
     return keys.split(this.keySeparator);
   }
 
-  exec(fn: Function, keys: string | Array<string>): unknown {
+  exec(fn: Function, keys: string | Array<string>, threshold = 1): unknown {
     const _keys = Array.isArray(keys) ? keys : [keys];
     const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
     if (cacheDataItem && !isPromise(cacheDataItem.value)) {
@@ -36,22 +42,31 @@ export class KeyValueCache {
       if (isPromise(value)) {
         // If fn is a promise, thenify it, store the value and return it.
         value.then((value) => {
-          this.#appCache.set(this.#getMapKey(_keys), value);
+          this.#appCache.set(this.#getMapKey(_keys), {
+            value,
+            threshold,
+            currentInvalidations: 0,
+          });
         });
         return value;
       } else {
         // If fn isn't a promise, store the value and return it.
-        this.#appCache.set(this.#getMapKey(_keys), value);
+        this.#appCache.set(this.#getMapKey(_keys), {
+          value,
+          threshold,
+          currentInvalidations: 0,
+        });
         return value;
       }
     }
   }
 
-  set(keys: string | Array<string>, value: any) {
-    this.#appCache.set(
-      this.#getMapKey(Array.isArray(keys) ? keys : [keys]),
-      value
-    );
+  set(keys: string | Array<string>, value: any, threshold = 1) {
+    this.#appCache.set(this.#getMapKey(Array.isArray(keys) ? keys : [keys]), {
+      value,
+      threshold,
+      currentInvalidations: 0,
+    });
   }
 
   get(keys: string | Array<string>) {
@@ -71,19 +86,29 @@ export class KeyValueCache {
     return this.#appCache.delete(this.#getMapKey(_keys));
   }
 
-  deleteByKey(key: string | RegExp): number {
+  invalidate(key: string): any {
+    const cacheDataItem = this.#appCache.get(key);
+    if (cacheDataItem) {
+      cacheDataItem.currentInvalidations++;
+      if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
+        this.#appCache.delete(key);
+      }
+    }
+  }
+
+  invalidateByKey(key: string | RegExp): number {
     let count = 0;
     if (key instanceof RegExp) {
       for (const [k] of this.#appCache) {
         if (this.#reconstructMapKey(k).some((_k) => key.test(_k))) {
-          this.#appCache.delete(k);
+          this.invalidate(k);
           count++;
         }
       }
     } else {
       for (const [k] of this.#appCache) {
         if (k.includes(key)) {
-          this.#appCache.delete(k);
+          this.invalidate(k);
           count++;
         }
       }
@@ -91,8 +116,8 @@ export class KeyValueCache {
     return count;
   }
 
-  deleteByKeys(keys: Array<string>): number {
-    return keys.reduce((acc, key) => acc + this.deleteByKey(key), 0);
+  invalidateByKeys(keys: Array<string | RegExp>): number {
+    return keys.reduce((acc, key) => acc + this.invalidateByKey(key), 0);
   }
 
   clear() {
