@@ -1,47 +1,42 @@
-function isPromise(p: any): p is Promise<any> {
-  return p && typeof p.then === "function";
-}
+import { arraify, isPromise } from "./lib/utils";
+import { CacheItem } from "./models/CacheItem";
 
-interface CacheItem {
-  value: any;
-  dependencyKeys: Array<string>;
-  threshold: number;
-  currentInvalidations: number;
-}
+
+
 
 export class KeyValueCache {
   #appCache: Map<string, CacheItem>;
-  keySeparator = "|||";
+  KEY_SEPARATOR = "|||";
+  DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
 
   constructor(keySeparator = "|||") {
     this.#appCache = new Map();
-    this.keySeparator = keySeparator;
+    this.KEY_SEPARATOR = keySeparator;
   }
 
   #getMapKey(keys: Array<string>) {
-    return keys.join(this.keySeparator);
+    return keys.join(this.KEY_SEPARATOR);
   }
 
   #reconstructMapKey(keys: string) {
-    return keys.split(this.keySeparator);
+    return keys.split(this.KEY_SEPARATOR);
   }
 
   exec(
     fn: Function,
-    keys: string | Array<string>,
+    key: string | Array<string>,
     threshold = 1,
-    dependencyKeys: string | Array<string> = []
+    dependencyKeys: string | Array<string> = [],
+    ttl = this.DEFAULT_TTL
   ): unknown {
-    const _keys = Array.isArray(keys) ? keys : [keys];
-    const _dependencyKeys = Array.isArray(dependencyKeys)
-      ? dependencyKeys
-      : [dependencyKeys];
+    const _keys = arraify(key);
+    const _dependencyKeys = arraify(dependencyKeys);
 
-    const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
-    if (cacheDataItem && !isPromise(cacheDataItem.value)) {
+    const cacheDataItem = this.get(_keys);
+    if (cacheDataItem && !isPromise(fn)) {
       // If fn isn't a promise and we already cached it, return it as it is
       return cacheDataItem.value;
-    } else if (cacheDataItem && isPromise(cacheDataItem.value)) {
+    } else if (cacheDataItem && isPromise(fn)) {
       // If fn is a promise and we already cached it, return it as a resolving promise
       return new Promise((resolve) => {
         resolve(cacheDataItem.value);
@@ -52,49 +47,59 @@ export class KeyValueCache {
       if (isPromise(value)) {
         // If fn is a promise, thenify it, store the value and return it.
         value.then((value) => {
-          this.set(_keys, value, threshold, _dependencyKeys);
+          this.set(_keys, value, threshold, _dependencyKeys, ttl);
         });
         return value;
       } else {
         // If fn isn't a promise, store the value and return it.
-        this.set(_keys, value, threshold, _dependencyKeys);
+        this.set(_keys, value, threshold, _dependencyKeys, ttl);
         return value;
       }
     }
   }
 
   set(
-    keys: string | Array<string>,
+    key: string | Array<string>,
     value: any,
     threshold = 1,
-    dependencyKeys: Array<string> = []
+    dependencyKeys: Array<string> = [],
+    ttl = this.DEFAULT_TTL
   ) {
-    this.#appCache.set(this.#getMapKey(Array.isArray(keys) ? keys : [keys]), {
+    this.#appCache.set(this.#getMapKey(arraify(key)), {
       value,
       dependencyKeys,
       threshold,
       currentInvalidations: 0,
+      ttl
     });
   }
 
-  get(keys: string | Array<string>) {
-    const _keys = Array.isArray(keys) ? keys : [keys];
+  get(key: string | Array<string>) {
+    const _keys = arraify(key)
     const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
+    // Check ttl
+    if (cacheDataItem && cacheDataItem.ttl) {
+      const now = Date.now();
+      if (now - cacheDataItem.ttl > cacheDataItem.ttl) {
+        this.#appCache.delete(this.#getMapKey(_keys));
+        return undefined;
+      }
+    }
     return cacheDataItem && cacheDataItem.value;
   }
 
-  has(keys: string | Array<string>) {
+  has(key: string | Array<string>) {
     return this.#appCache.has(
-      this.#getMapKey(Array.isArray(keys) ? keys : [keys])
+      this.#getMapKey(arraify(key))
     );
   }
 
-  delete(keys: string | Array<string>) {
-    const _keys = Array.isArray(keys) ? keys : [keys];
+  delete(key: string | Array<string>) {
+    const _keys = arraify(key);
     return this.#appCache.delete(this.#getMapKey(_keys));
   }
 
-  invalidate(key: string): any {
+  invalidate(key: string): void {
     let [cacheKey, cacheDataItem] = [key, this.#appCache.get(key)];
     if (!cacheDataItem) {
       // Search for the key in the cache using the dependencyKeys array
@@ -147,10 +152,10 @@ export class KeyValueCache {
   }
 
   setDependencyKeys(
-    keys: string | Array<string>,
+    key: string | Array<string>,
     dependencyKeys: Array<string>
   ) {
-    const _keys = Array.isArray(keys) ? keys : [keys];
+    const _keys = arraify(key);
     const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
     if (cacheDataItem) {
       cacheDataItem.dependencyKeys = dependencyKeys;

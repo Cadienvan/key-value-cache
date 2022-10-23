@@ -1,8 +1,17 @@
 # What is this?
 
-A simple in-memory key-value cache for function execution, allowing both sync and async operations using the same methods.  
-It provides an invalidation mechanism based both on exact string and regex.  
-The class also provides a threshold for every cached item. When the threshold is reached, the item is invalidated.
+An in-memory key-value cache for function execution.  
+For every function, you can define a key or a set of keys and an additional array of dependencies to provide dependency-based invalidation.  
+The library provides many functionalities, such as:
+
+- Sync and async function executions: if you pass an async function, the library will return a Promise.
+- Multi-key association: you can associate multiple keys to the cache entry to have a fine-grained invalidation mechanism.
+- Dependency Key Association: you can associate a set of additional keys to the cache entry to have a dependency-based invalidation mechanism.
+- Invalidation based on both primary and dependency keys: you can invalidate the cache entry using both one of its keys or one of its dependency keys.
+- Invalidation based on TTL: you can set a TTL for each cache entry.
+- Invalidation based on threshold: if the cache entry exceeds a certain threshold, the library will invalidate the entry.
+
+Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept.
 
 # How do I install it?
 
