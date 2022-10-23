@@ -161,6 +161,36 @@ export class KeyValueCache {
     this.#appCache.clear();
   }
 
+  snapshot() {
+    return JSON.stringify(
+      Array.from(this.#appCache.entries()).map(([k, v]) => [
+        k,
+        { ...v, currentInvalidations: 0 },
+      ])
+    );
+  }
+
+  restore(snapshotCache: string) {
+    // Check if the snapshot is valid
+    try {
+      JSON.parse(snapshotCache);
+    } catch (e) {
+      throw new Error("Invalid snapshot");
+    }
+
+    // Check if the parsed snapshot is an array
+    const parsedSnapshot = JSON.parse(snapshotCache);
+    if (!Array.isArray(parsedSnapshot)) {
+      throw new Error("Invalid snapshot");
+    }
+
+    try {
+      this.#appCache = new Map(parsedSnapshot);
+    } catch (e) {
+      throw new Error("Invalid snapshot");
+    }
+  }
+
   get size() {
     return this.#appCache.size;
   }
