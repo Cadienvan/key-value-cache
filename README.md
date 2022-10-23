@@ -20,12 +20,21 @@ cache.setDependencyKeys("users", ["users:1", "users:2"]);
 await updateUser(2);
 cache.invalidateByKey("users:2");
 const users = cache.get("users"); // This will be invalidated
-// @TODO: DA FINIRE
 ```
 
-// @TODO: DA FINIRE
-
-````
+```js
+import { KeyValueCache } from "@cadienvan/key-value-cache";
+const cache = new KeyValueCache();
+const users = await fetchUsers();
+cache.set("users", users, 2); // Define a threshold of 2
+cache.setDependencyKeys("users", ["users:1", "users:2", "users:3", "users:4"]);
+await updateUser(2);
+cache.invalidateByKey("users:2");
+const users = cache.get("users"); // This will not be invalidated as the threshold is set to 2.
+await updateUser(3);
+cache.invalidateByKey("users:3");
+const users = cache.get("users"); // This will be invalidated as the threshold is set to 2.
+```
 
 Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept.
 
@@ -35,7 +44,7 @@ You can install it by using the following command:
 
 ```bash
 npm install @cadienvan/key-value-cache
-````
+```
 
 # Why did you build it?
 
@@ -116,8 +125,12 @@ cache.get("key"); // This will return undefined
 Remember to use the `invalidateByKey` method to increase the invalidation counter, while the `delete` method will delete the item from the cache independently from the defined threshold.
 
 # How can I define a TTL for invalidation?
+
 You can pass a TTL as the fifht parameter of the `exec` and `set` methods.  
-When the TTL is reached, the item is invalidated.
+When the TTL is reached, the item is invalidated.  
+Remember the TTL is lazy, so it will be evaluated only when the item is retrieved from the cache.  
+As long as the item isn't requested, it will stay there.  
+Future updates will provide some sort of background job to invalidate the items.
 
 ```js
 const cache = new KeyValueCache();
@@ -128,6 +141,7 @@ cache.get("key"); // This will return undefined
 ```
 
 # What is the difference between the `invalidate` and `invalidateByKey` methods?
+
 The first one will search for exact match between given key and the cache key.  
 The second one will search both in the primary keys and in the dependency keys.
 
