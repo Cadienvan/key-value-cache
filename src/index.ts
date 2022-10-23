@@ -101,15 +101,6 @@ export class KeyValueCache {
 
   invalidate(key: string): void {
     let [cacheKey, cacheDataItem] = [key, this.#appCache.get(key)];
-    if (!cacheDataItem) {
-      // Search for the key in the cache using the dependencyKeys array
-      for (const [k, v] of this.#appCache) {
-        if (v.dependencyKeys.includes(key)) {
-          [cacheKey, cacheDataItem] = [k, v];
-          break;
-        }
-      }
-    }
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {

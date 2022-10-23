@@ -11,6 +11,22 @@ The library provides many functionalities, such as:
 - Invalidation based on TTL: you can set a TTL for each cache entry.
 - Invalidation based on threshold: if the cache entry exceeds a certain threshold, the library will invalidate the entry.
 
+```js
+import { KeyValueCache } from "@cadienvan/key-value-cache";
+const cache = new KeyValueCache();
+const users = await fetchUsers();
+cache.set("users", users);
+cache.setDependencyKeys("users", ["users:1", "users:2"]);
+await updateUser(2);
+cache.invalidateByKey("users:2");
+const users = cache.get("users"); // This will be invalidated
+// @TODO: DA FINIRE
+```
+
+// @TODO: DA FINIRE
+
+````
+
 Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept.
 
 # How do I install it?
@@ -19,7 +35,7 @@ You can install it by using the following command:
 
 ```bash
 npm install @cadienvan/key-value-cache
-```
+````
 
 # Why did you build it?
 
@@ -39,7 +55,8 @@ Look at the `demo` folder in the GitHub Repository in order to have some proofs 
 # Does it support async functions?
 
 Yes, it does. You can use it with both synchronous and asynchronous functions.  
-Look at the `demo` folder in the GitHub Repository for an example.
+Look at the `demo` folder in the GitHub Repository for an example.  
+Even if async functions are supported, the suggested approach would be to use the library in a sync way using the `set` method after asyncronously completing the operation.
 
 # Which parameters are available?
 
@@ -62,7 +79,7 @@ cache.exec(() => {
 }, ["longRunningOperation"]); // This will return the result directly from the cache
 ```
 
-Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method.
+Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method and pass a straight value.
 
 ```js
 cache.set("key", "value");
@@ -97,6 +114,34 @@ cache.get("key"); // This will return undefined
 ```
 
 Remember to use the `invalidateByKey` method to increase the invalidation counter, while the `delete` method will delete the item from the cache independently from the defined threshold.
+
+# How can I define a TTL for invalidation?
+You can pass a TTL as the fifht parameter of the `exec` and `set` methods.  
+When the TTL is reached, the item is invalidated.
+
+```js
+const cache = new KeyValueCache();
+cache.set("key", "value", 1, [], 1000); // This will store the value in the cache and set the TTL to 1000ms
+cache.get("key"); // This will return the value
+await sleep(1000); // This will wait for 1000ms
+cache.get("key"); // This will return undefined
+```
+
+# What is the difference between the `invalidate` and `invalidateByKey` methods?
+The first one will search for exact match between given key and the cache key.  
+The second one will search both in the primary keys and in the dependency keys.
+
+```js
+const cache = new KeyValueCache();
+cache.set("key", "value", 1, ["depKey"]); // This will store the value in the cache.
+cache.get("key"); // This will return the value
+cache.invalidate("key"); // This will invalidate the item
+cache.get("key"); // This will return undefined
+cache.set("key", "value", 1, ["depKey"]); // This will store the value in the cache.
+cache.get("key"); // This will return the value
+cache.invalidateByKey("depKey"); // This will invalidate the item
+cache.get("key"); // This will return undefined
+```
 
 # How can I define a dependency array for invalidation?
 
