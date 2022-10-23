@@ -1,11 +1,20 @@
-import { arraify, isPromise } from "./lib/utils";
-import { CacheItem } from "./models/CacheItem";
+import { arraify, isPromise } from "./lib";
+import { CacheItem, TKey, TMapCache, TStrings } from "./types";
 
-
-
+/**
+ * I would probably add a Generic here like
+ * export class KeyValueCache<T>
+ *   #appCache: TMapCache<T> ... and so on
+ *  
+ *  export interface CacheItem<T> {
+      value: any;
+      ...
+ *  
+ *  export type TMapCache<T> = Map<string, CacheItem<T>>;
+ */
 
 export class KeyValueCache {
-  #appCache: Map<string, CacheItem>;
+  #appCache: TMapCache;
   KEY_SEPARATOR = "|||";
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
 
@@ -14,33 +23,31 @@ export class KeyValueCache {
     this.KEY_SEPARATOR = keySeparator;
   }
 
-  #getMapKey(keys: Array<string>) {
+  #getMapKey(keys: TStrings) {
     return keys.join(this.KEY_SEPARATOR);
   }
 
-  #reconstructMapKey(keys: string) {
+  #reconstructMapKey(keys: string): TStrings {
     return keys.split(this.KEY_SEPARATOR);
   }
 
   exec(
-    fn: Function,
-    key: string | Array<string>,
+    fn: () => Promise<any>,
+    key: TKey,
     threshold = 1,
-    dependencyKeys: string | Array<string> = [],
+    dependencyKeys: TKey = [],
     ttl = this.DEFAULT_TTL
-  ): unknown {
+  ): Pick<CacheItem, "value"> | Promise<any> {
     const _keys = arraify(key);
     const _dependencyKeys = arraify(dependencyKeys);
-
     const cacheDataItem = this.get(_keys);
-    if (cacheDataItem && !isPromise(fn)) {
-      // If fn isn't a promise and we already cached it, return it as it is
-      return cacheDataItem.value;
-    } else if (cacheDataItem && isPromise(fn)) {
-      // If fn is a promise and we already cached it, return it as a resolving promise
-      return new Promise((resolve) => {
-        resolve(cacheDataItem.value);
-      });
+
+    if (cacheDataItem) {
+      return isPromise(fn)
+        ? cacheDataItem.value
+        : new Promise((resolve) => {
+            resolve(cacheDataItem.value);
+          });
     } else {
       // If we haven't cached it yet, cache it and return it
       const value = fn();
@@ -50,19 +57,18 @@ export class KeyValueCache {
           this.set(_keys, value, threshold, _dependencyKeys, ttl);
         });
         return value;
-      } else {
-        // If fn isn't a promise, store the value and return it.
-        this.set(_keys, value, threshold, _dependencyKeys, ttl);
-        return value;
       }
+      // If fn isn't a promise, store the value and return it.
+      this.set(_keys, value, threshold, _dependencyKeys, ttl);
+      return value;
     }
   }
 
   set(
-    key: string | Array<string>,
+    key: TKey,
     value: any,
     threshold = 1,
-    dependencyKeys: Array<string> = [],
+    dependencyKeys: TStrings = [],
     ttl = this.DEFAULT_TTL
   ) {
     this.#appCache.set(this.#getMapKey(arraify(key)), {
@@ -70,13 +76,19 @@ export class KeyValueCache {
       dependencyKeys,
       threshold,
       currentInvalidations: 0,
-      ttl
+      ttl,
     });
   }
 
-  get(key: string | Array<string>) {
-    const _keys = arraify(key)
-    const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
+  isCached = (key: TKey) => {
+    const _keys = arraify(key);
+    return this.#appCache.get(this.#getMapKey(_keys));
+  };
+
+  get(key: TKey): Pick<CacheItem, "value"> | undefined {
+    const _keys = arraify(key);
+    const cacheDataItem = this.isCached(key);
+
     // Check ttl
     if (cacheDataItem && cacheDataItem.ttl) {
       const now = Date.now();
@@ -88,19 +100,17 @@ export class KeyValueCache {
     return cacheDataItem && cacheDataItem.value;
   }
 
-  has(key: string | Array<string>) {
-    return this.#appCache.has(
-      this.#getMapKey(arraify(key))
-    );
+  has(key: TKey) {
+    return this.#appCache.has(this.#getMapKey(arraify(key)));
   }
 
-  delete(key: string | Array<string>) {
+  delete(key: TKey) {
     const _keys = arraify(key);
     return this.#appCache.delete(this.#getMapKey(_keys));
   }
 
   invalidate(key: string): void {
-    let [cacheKey, cacheDataItem] = [key, this.#appCache.get(key)];
+    let [cacheKey, cacheDataItem] = [key, this.isCached(key)];
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
@@ -138,16 +148,17 @@ export class KeyValueCache {
     return count;
   }
 
-  invalidateByKeys(keys: Array<string | RegExp>): number {
-    return keys.reduce((acc, key) => acc + this.invalidateByKey(key), 0);
+  invalidateByKeys(keys: Array<string | RegExp>) {
+    // Why a reduce? The invalidateByKeys is never used inside the class, why sum the invalidateByKey return
+    // return keys.reduce((acc, key) => acc + this.invalidateByKey(key), 0);
+    keys.forEach((key) => this.invalidateByKey(key));
   }
 
   setDependencyKeys(
     key: string | Array<string>,
     dependencyKeys: Array<string>
   ) {
-    const _keys = arraify(key);
-    const cacheDataItem = this.#appCache.get(this.#getMapKey(_keys));
+    const cacheDataItem = this.isCached(key);
     if (cacheDataItem) {
       cacheDataItem.dependencyKeys = dependencyKeys;
     }
@@ -159,7 +170,7 @@ export class KeyValueCache {
 
   snapshot(resetCurrentInvalidations = false) {
     return JSON.stringify(
-      Array.from(this.#appCache.entries()).map(([k, v]) => [
+      Array.from(this.entries()).map(([k, v]) => [
         k,
         {
           ...v,
