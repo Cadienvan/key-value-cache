@@ -199,6 +199,26 @@ You can check if an element is in the cache by using the `has` method.
 cache.has("key");
 ```
 
+# Can I make a snapshot of the cache and restore it in a later time?
+
+You can create a snapshot of the cache by using the `snapshot` method.
+
+```js
+const snapshot = cache.snapshot();
+```
+
+You can optionally pass a boolean to the `snapshot` method to reset the invalidation counter of the items in the snapshot.
+
+```js
+const snapshot = cache.snapshot(true);
+```
+
+You can restore the snapshot by using the `restore` method.
+
+```js
+cache.restore(snapshot);
+```
+
 # Does the class support time-based expiration?
 
 No, it doesn't. You can use the [@cadienvan/timed-cache](https://github.com/Cadienvan/timed-cache) library in order to achieve this.

@@ -161,11 +161,16 @@ export class KeyValueCache {
     this.#appCache.clear();
   }
 
-  snapshot() {
+  snapshot(resetCurrentInvalidations = false) {
     return JSON.stringify(
       Array.from(this.#appCache.entries()).map(([k, v]) => [
         k,
-        { ...v, currentInvalidations: 0 },
+        {
+          ...v,
+          currentInvalidations: resetCurrentInvalidations
+            ? 0
+            : v.currentInvalidations,
+        },
       ])
     );
   }
