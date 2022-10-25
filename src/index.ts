@@ -2,15 +2,13 @@ import { arraify, isPromise } from "./lib";
 import { CacheItem, TKey, TMapCache, TStrings } from "./types";
 
 /**
- * I would probably add a Generic here like
+ * @todo
+ * Pass a generic to class
+ *
+ * @example
  * export class KeyValueCache<T>
- *   #appCache: TMapCache<T> ... and so on
- *  
- *  export interface CacheItem<T> {
-      value: any;
-      ...
- *  
- *  export type TMapCache<T> = Map<string, CacheItem<T>>;
+ * #appCache: TMapCache<T> ... and so on
+ * export type TMapCache<T> = Map<string, CacheItem<T>>;
  */
 
 export class KeyValueCache {
@@ -32,12 +30,12 @@ export class KeyValueCache {
   }
 
   exec(
-    fn: () => Promise<any>,
+    fn: () => Function,
     key: TKey,
     threshold = 1,
     dependencyKeys: TKey = [],
     ttl = this.DEFAULT_TTL
-  ): Pick<CacheItem, "value"> | Promise<any> {
+  ): Pick<CacheItem, "value"> | Function {
     const _keys = arraify(key);
     const _dependencyKeys = arraify(dependencyKeys);
     const cacheDataItem = this.get(_keys);
@@ -80,14 +78,14 @@ export class KeyValueCache {
     });
   }
 
-  isCached = (key: TKey) => {
+  cached = (key: TKey) => {
     const _keys = arraify(key);
     return this.#appCache.get(this.#getMapKey(_keys));
   };
 
   get(key: TKey): Pick<CacheItem, "value"> | undefined {
     const _keys = arraify(key);
-    const cacheDataItem = this.isCached(key);
+    const cacheDataItem = this.cached(key);
 
     // Check ttl
     if (cacheDataItem && cacheDataItem.ttl) {
@@ -110,7 +108,7 @@ export class KeyValueCache {
   }
 
   invalidate(key: string): void {
-    let [cacheKey, cacheDataItem] = [key, this.isCached(key)];
+    let [cacheKey, cacheDataItem] = [key, this.cached(key)];
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
@@ -149,16 +147,14 @@ export class KeyValueCache {
   }
 
   invalidateByKeys(keys: Array<string | RegExp>) {
-    // Why a reduce? The invalidateByKeys is never used inside the class, why sum the invalidateByKey return
-    // return keys.reduce((acc, key) => acc + this.invalidateByKey(key), 0);
-    keys.forEach((key) => this.invalidateByKey(key));
+    return keys.reduce((acc, key) => acc + this.invalidateByKey(key), 0);
   }
 
   setDependencyKeys(
     key: string | Array<string>,
     dependencyKeys: Array<string>
   ) {
-    const cacheDataItem = this.isCached(key);
+    const cacheDataItem = this.cached(key);
     if (cacheDataItem) {
       cacheDataItem.dependencyKeys = dependencyKeys;
     }
