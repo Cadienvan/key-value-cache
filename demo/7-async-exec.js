@@ -1,6 +1,14 @@
 import { KeyValueCache } from "../dist/index";
 const cache = new KeyValueCache();
 
+cache.onHit('sleep', () => {
+    console.log('sleep hit');
+})
+
+cache.onMiss('sleep', () => {
+    console.log('sleep miss');
+})
+
 // Promisify setTimeout
 const sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));

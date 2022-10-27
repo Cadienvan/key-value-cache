@@ -10,6 +10,7 @@ The library provides many functionalities, such as:
 - Invalidation based on both primary and dependency keys: you can invalidate the cache entry using both one of its keys or one of its dependency keys.
 - Invalidation based on TTL: you can set a TTL for each cache entry.
 - Invalidation based on threshold: if the cache entry exceeds a certain threshold, the library will invalidate the entry.
+- Event emitting mechanism: you can subscribe to events to be notified when a cache entry is added, removed, invalidated, hit, etc..
 
 ```js
 import { KeyValueCache } from "@cadienvan/key-value-cache";
@@ -230,7 +231,18 @@ cache.eventBus.on("onSet", (key) => {
 });
 ```  
 
-Please, refer to the exported `Events` enum to see the available events.
+Please, refer to the exported `Events` enum to see the available events.  
+Two commodity methods have been provided to listen to the two most common events: `onHit` and `onMiss`, providing a filter for the given key.
+
+```js
+cache.onHit((key) => {
+  console.log(`The key ${key} has been found in the cache`);
+});
+cache.onMiss((key) => {
+  console.log(`The key ${key} has not been found in the cache`);
+});
+```
+
 
 # How can I get the size of the cache?
 

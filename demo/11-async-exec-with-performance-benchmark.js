@@ -9,6 +9,7 @@ const asyncLongRunningOperation = async (timeInMs = 1000) => {
   });
 };
 
+(async() => {
 let perfTime = performance.now();
 await asyncLongRunningOperation();
 await asyncLongRunningOperation();
@@ -41,3 +42,4 @@ console.log(
   "Post-cache with double invalidation: ",
   performance.now() - perfTime
 );
+})();
