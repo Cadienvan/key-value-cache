@@ -1,4 +1,5 @@
-import { arraify, isPromise } from "./lib";
+import { arraify, EventBus, isPromise } from "./lib";
+import { EventCallback } from "./lib/eventBus";
 import { CacheItem, TKey, TMapCache, TStrings } from "./types";
 
 /**
@@ -11,14 +12,27 @@ import { CacheItem, TKey, TMapCache, TStrings } from "./types";
  * export type TMapCache<T> = Map<string, CacheItem<T>>;
  */
 
+export enum Events {
+  ON_SET = "onSet",
+  ON_HIT = "onHit",
+  ON_MISS = "onMiss",
+  ON_TTL_EXPIRED = "onTtlExpired",
+  ON_INVALIDATED = "onInvalidated",
+  ON_DELETED = "onDeleted",
+  ON_CLEAR = "onClear",
+  ON_SNAPSHOT_RESTORED = "onSnapshotRestored",
+}
+
 export class KeyValueCache {
   #appCache: TMapCache;
   KEY_SEPARATOR = "|||";
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
+  eventBus: EventBus;
 
   constructor(keySeparator = "|||") {
     this.#appCache = new Map();
     this.KEY_SEPARATOR = keySeparator;
+    this.eventBus = new EventBus();
   }
 
   #getMapKey(keys: TStrings) {
@@ -30,31 +44,32 @@ export class KeyValueCache {
   }
 
   exec(
-    fn: () => Function,
+    fn: Function,
     key: TKey,
     threshold = 1,
     dependencyKeys: TKey = [],
     ttl = this.DEFAULT_TTL
-  ): Pick<CacheItem, "value"> | Function {
+  ): Pick<CacheItem, "value"> | Promise<Pick<CacheItem, "value">> {
     const _keys = arraify(key);
     const _dependencyKeys = arraify(dependencyKeys);
-    const cacheDataItem = this.get(_keys);
+    const cacheDataItemValue = this.get(_keys);
 
-    if (cacheDataItem) {
+    if (cacheDataItemValue) {
       return isPromise(fn)
-        ? cacheDataItem.value
-        : new Promise((resolve) => {
-            resolve(cacheDataItem.value);
-          });
+        ? new Promise((resolve) => {
+            resolve(cacheDataItemValue);
+          })
+        : cacheDataItemValue;
     } else {
       // If we haven't cached it yet, cache it and return it
       const value = fn();
       if (isPromise(value)) {
-        // If fn is a promise, thenify it, store the value and return it.
-        value.then((value) => {
-          this.set(_keys, value, threshold, _dependencyKeys, ttl);
+        return new Promise((resolve) => {
+          value.then((v) => {
+            this.set(_keys, v, threshold, _dependencyKeys, ttl);
+            resolve(v);
+          });
         });
-        return value;
       }
       // If fn isn't a promise, store the value and return it.
       this.set(_keys, value, threshold, _dependencyKeys, ttl);
@@ -74,8 +89,9 @@ export class KeyValueCache {
       dependencyKeys,
       threshold,
       currentInvalidations: 0,
-      ttl,
+      ttl: Date.now() + ttl,
     });
+    this.eventBus.emit(Events.ON_SET, key);
   }
 
   cached = (key: TKey) => {
@@ -86,12 +102,15 @@ export class KeyValueCache {
   get(key: TKey): Pick<CacheItem, "value"> | undefined {
     const _keys = arraify(key);
     const cacheDataItem = this.cached(key);
+    if (cacheDataItem) this.eventBus.emit(Events.ON_HIT, key);
+    else this.eventBus.emit(Events.ON_MISS, key);
 
     // Check ttl
     if (cacheDataItem && cacheDataItem.ttl) {
       const now = Date.now();
-      if (now - cacheDataItem.ttl > cacheDataItem.ttl) {
+      if (now - cacheDataItem.ttl > 0) {
         this.#appCache.delete(this.#getMapKey(_keys));
+        this.eventBus.emit(Events.ON_TTL_EXPIRED, key);
         return undefined;
       }
     }
@@ -104,13 +123,16 @@ export class KeyValueCache {
 
   delete(key: TKey) {
     const _keys = arraify(key);
-    return this.#appCache.delete(this.#getMapKey(_keys));
+    const resp = this.#appCache.delete(this.#getMapKey(_keys));
+    this.eventBus.emit(Events.ON_DELETED, key);
+    return resp;
   }
 
   invalidate(key: string): void {
     let [cacheKey, cacheDataItem] = [key, this.cached(key)];
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
+    this.eventBus.emit(Events.ON_INVALIDATED, key);
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
       this.#appCache.delete(cacheKey);
     }
@@ -161,8 +183,10 @@ export class KeyValueCache {
   }
 
   clear() {
+    this.eventBus.emit(Events.ON_CLEAR, {});
     this.#appCache.clear();
   }
+
 
   snapshot(resetCurrentInvalidations = false) {
     return JSON.stringify(
@@ -194,10 +218,24 @@ export class KeyValueCache {
 
     try {
       this.#appCache = new Map(parsedSnapshot);
+      this.eventBus.emit(Events.ON_SNAPSHOT_RESTORED, {});
     } catch (e) {
       throw new Error("Invalid snapshot");
     }
   }
+
+  onHit(key: TKey, fn: EventCallback) {
+    return this.eventBus.on(Events.ON_HIT, (eventData) => {
+      if (eventData === key) fn(eventData);
+    });
+  }
+
+  onMiss(key: TKey, fn: EventCallback) {
+    return this.eventBus.on(Events.ON_MISS, (eventData) => {
+      if (eventData === key) fn(eventData);
+    });
+  }
+
 
   get size() {
     return this.#appCache.size;
