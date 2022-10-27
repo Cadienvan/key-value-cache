@@ -1,10 +1,6 @@
 import { KeyValueCache } from "../dist/index.js";
 const cache = new KeyValueCache();
 
-const longRunningOperation = (iterations = 500000000) => {
-  for (let i = 0; i < iterations; i++) {}
-  return true;
-};
 
 cache.set('user-1', { id: 1, name: "John" });
 cache.set('user-2', { id: 2, name: "Jane" });

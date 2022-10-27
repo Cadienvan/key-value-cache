@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -fr dist",
-    "build": "npm run clean && tsc"
+    "build": "npm run clean && tsc",
+    "demo-test": "for file in demo/*.js; do node --experimental-specifier-resolution=node $file; done"
   },
   "prepublish": "tsc",
   "devDependencies": {

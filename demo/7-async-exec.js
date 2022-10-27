@@ -9,7 +9,6 @@ cache.onMiss('sleep', () => {
     console.log('sleep miss');
 })
 
-// Promisify setTimeout
 const sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 };

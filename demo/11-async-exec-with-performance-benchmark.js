@@ -1,4 +1,6 @@
 import { KeyValueCache } from "../dist/index.js";
+import {performance} from 'perf_hooks';
+
 var kvCache = new KeyValueCache();
 
 const asyncLongRunningOperation = async (timeInMs = 1000) => {
