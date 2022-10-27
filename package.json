@@ -12,6 +12,7 @@
   },
   "prepublish": "tsc",
   "devDependencies": {
+    "@types/node": "^18.11.7",
     "tsc": "^2.0.4",
     "typescript": "^4.8.4"
   },

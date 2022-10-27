@@ -8,7 +8,7 @@ import { CacheItem, TKey, TMapCache, TStrings } from "./types";
  *
  * @example
  * export class KeyValueCache<T>
- * #appCache: TMapCache<T> ... and so on
+ * appCache: TMapCache<T> ... and so on
  * export type TMapCache<T> = Map<string, CacheItem<T>>;
  */
 
@@ -24,22 +24,22 @@ export enum Events {
 }
 
 export class KeyValueCache {
-  #appCache: TMapCache;
+  appCache: TMapCache;
   KEY_SEPARATOR = "|||";
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
   eventBus: EventBus;
 
   constructor(keySeparator = "|||") {
-    this.#appCache = new Map();
+    this.appCache = new Map();
     this.KEY_SEPARATOR = keySeparator;
     this.eventBus = new EventBus();
   }
 
-  #getMapKey(keys: TStrings) {
+  getMapKey(keys: TStrings) {
     return keys.join(this.KEY_SEPARATOR);
   }
 
-  #reconstructMapKey(keys: string): TStrings {
+  reconstructMapKey(keys: string): TStrings {
     return keys.split(this.KEY_SEPARATOR);
   }
 
@@ -84,7 +84,7 @@ export class KeyValueCache {
     dependencyKeys: TStrings = [],
     ttl = this.DEFAULT_TTL
   ) {
-    this.#appCache.set(this.#getMapKey(arraify(key)), {
+    this.appCache.set(this.getMapKey(arraify(key)), {
       value,
       dependencyKeys,
       threshold,
@@ -96,7 +96,7 @@ export class KeyValueCache {
 
   cached = (key: TKey) => {
     const _keys = arraify(key);
-    return this.#appCache.get(this.#getMapKey(_keys));
+    return this.appCache.get(this.getMapKey(_keys));
   };
 
   get(key: TKey): Pick<CacheItem, "value"> | undefined {
@@ -109,7 +109,7 @@ export class KeyValueCache {
     if (cacheDataItem && cacheDataItem.ttl) {
       const now = Date.now();
       if (now - cacheDataItem.ttl > 0) {
-        this.#appCache.delete(this.#getMapKey(_keys));
+        this.appCache.delete(this.getMapKey(_keys));
         this.eventBus.emit(Events.ON_TTL_EXPIRED, key);
         return undefined;
       }
@@ -118,12 +118,12 @@ export class KeyValueCache {
   }
 
   has(key: TKey) {
-    return this.#appCache.has(this.#getMapKey(arraify(key)));
+    return this.appCache.has(this.getMapKey(arraify(key)));
   }
 
   delete(key: TKey) {
     const _keys = arraify(key);
-    const resp = this.#appCache.delete(this.#getMapKey(_keys));
+    const resp = this.appCache.delete(this.getMapKey(_keys));
     this.eventBus.emit(Events.ON_DELETED, key);
     return resp;
   }
@@ -134,15 +134,15 @@ export class KeyValueCache {
     cacheDataItem.currentInvalidations++;
     this.eventBus.emit(Events.ON_INVALIDATED, key);
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
-      this.#appCache.delete(cacheKey);
+      this.appCache.delete(cacheKey);
     }
   }
 
   invalidateByKey(key: string | RegExp): number {
     let count = 0;
     if (key instanceof RegExp) {
-      for (const [k, v] of this.#appCache) {
-        if (this.#reconstructMapKey(k).some((_k) => key.test(_k))) {
+      for (const [k, v] of Array.from(this.appCache)) {
+        if (this.reconstructMapKey(k).some((_k) => key.test(_k))) {
           this.invalidate(k);
           count++;
         }
@@ -153,7 +153,7 @@ export class KeyValueCache {
         }
       }
     } else {
-      for (const [k, v] of this.#appCache) {
+      for (const [k, v] of Array.from(this.appCache)) {
         if (k.includes(key)) {
           this.invalidate(k);
           count++;
@@ -184,13 +184,12 @@ export class KeyValueCache {
 
   clear() {
     this.eventBus.emit(Events.ON_CLEAR, {});
-    this.#appCache.clear();
+    this.appCache.clear();
   }
-
 
   snapshot(resetCurrentInvalidations = false) {
     return JSON.stringify(
-      Array.from(this.entries()).map(([k, v]) => [
+      Array.from(this.entries).map(([k, v]) => [
         k,
         {
           ...v,
@@ -217,7 +216,7 @@ export class KeyValueCache {
     }
 
     try {
-      this.#appCache = new Map(parsedSnapshot);
+      this.appCache = new Map(parsedSnapshot);
       this.eventBus.emit(Events.ON_SNAPSHOT_RESTORED, {});
     } catch (e) {
       throw new Error("Invalid snapshot");
@@ -236,32 +235,31 @@ export class KeyValueCache {
     });
   }
 
-
   get size() {
-    return this.#appCache.size;
+    return this.appCache.size;
   }
 
-  entries() {
-    return this.#appCache.entries();
+  get entries() {
+    return this.appCache.entries();
   }
 
-  keys() {
-    return this.#appCache.keys();
+  get keys() {
+    return this.appCache.keys();
   }
 
-  values() {
-    return this.#appCache.values();
+  get values() {
+    return this.appCache.values();
   }
 
   forEach(callback: (value: any, key: string, map: Map<string, any>) => void) {
-    this.#appCache.forEach(callback);
+    this.appCache.forEach(callback);
   }
 
   [Symbol.iterator]() {
-    return this.#appCache[Symbol.iterator]();
+    return this.appCache[Symbol.iterator]();
   }
 
   [Symbol.toStringTag]() {
-    return this.#appCache[Symbol.toStringTag];
+    return this.appCache[Symbol.toStringTag];
   }
 }
