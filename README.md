@@ -46,10 +46,6 @@ You can install it by using the following command:
 npm install @cadienvan/key-value-cache
 ```
 
-# Why did you build it?
-
-I wanted to build a simple key-value cache mechanism with low footprint and easy to use. I also wanted to be able to use it both synchronously and asynchronously.
-
 # How can I use it?
 
 You can import and instance a new KeyValueCache object as follows:
@@ -61,11 +57,12 @@ const cache = new KeyValueCache();
 
 Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept considering both synchronous and asynchronous functions.
 
-# Does it support async functions?
+# Does it support both sync and async functions?
 
 Yes, it does. You can use it with both synchronous and asynchronous functions.  
 Look at the `demo` folder in the GitHub Repository for an example.  
-Even if async functions are supported, the suggested approach would be to use the library in a sync way using the `set` method after asyncronously completing the operation.
+If you pass an async function to the `exec`method, it will return a Promise.  
+If you pass a synchronous function to the `exec` method, it will return the value.
 
 # Which parameters are available?
 
@@ -86,6 +83,13 @@ cache.exec(() => {
 cache.exec(() => {
   return longRunningOperation();
 }, ["longRunningOperation"]); // This will return the result directly from the cache
+```
+
+If you want to store the result of an async function, just await the result.
+
+```js
+const cache = new KeyValueCache();
+const result = await cache.exec(async () => asyncLongRunningOperation(), ["asyncLongRunningOperation"]); // This will execute the async function and store the result in the cache
 ```
 
 Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method and pass a straight value.
@@ -216,6 +220,17 @@ You can clear the cache by using the `clear` method.
 ```js
 cache.clear();
 ```
+
+# Is there an event emitting mechanism?
+Yes, you can use the `eventBus` inside the cache to listen to events.
+
+```js
+cache.eventBus.on("onSet", (key) => {
+  console.log(`The key ${key} has been saved in the cache`);
+});
+```  
+
+Please, refer to the exported `Events` enum to see the available events.
 
 # How can I get the size of the cache?
 
