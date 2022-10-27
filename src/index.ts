@@ -138,7 +138,7 @@ export class KeyValueCache {
     }
   }
 
-  invalidateByKey(key: string | RegExp): number {
+  /* invalidateByKey(key: string | RegExp): number {
     let count = 0;
     if (key instanceof RegExp) {
       for (const [k, v] of Array.from(this.appCache)) {
@@ -160,6 +160,38 @@ export class KeyValueCache {
         }
         // Search for the key in the cache using the dependencyKeys array
         if (v.dependencyKeys.includes(key)) {
+          this.invalidate(k);
+          count++;
+        }
+      }
+    }
+    return count;
+  } */
+
+  /**
+   * @name invalidateByKey
+   * @description
+   * ...
+   *
+   * @param key
+   * @returns
+   */
+  invalidateByKey(key: string | RegExp): number {
+    let count = 0;
+    const cache = Array.from(this.appCache);
+
+    for (const [k, v] of cache) {
+      if (key instanceof RegExp) {
+        const check = this.reconstructMapKey(k).some((_k) => key.test(_k));
+        const value = v.dependencyKeys.some((_k) => key.test(_k));
+        if (check || value) {
+          this.invalidate(k);
+          count++;
+        }
+      } else {
+        const check = k.includes(key);
+        const value = v.dependencyKeys.includes(key);
+        if (check || value) {
           this.invalidate(k);
           count++;
         }
