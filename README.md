@@ -90,7 +90,10 @@ If you want to store the result of an async function, just await the result.
 
 ```js
 const cache = new KeyValueCache();
-const result = await cache.exec(async () => asyncLongRunningOperation(), ["asyncLongRunningOperation"]); // This will execute the async function and store the result in the cache
+const result = await cache.exec(
+  async () => asyncLongRunningOperation(),
+  ["asyncLongRunningOperation"]
+); // This will execute the async function and store the result in the cache
 ```
 
 Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method and pass a straight value.
@@ -223,13 +226,14 @@ cache.clear();
 ```
 
 # Is there an event emitting mechanism?
+
 Yes, you can use the `eventBus` inside the cache to listen to events.
 
 ```js
 cache.eventBus.on("onSet", (key) => {
   console.log(`The key ${key} has been saved in the cache`);
 });
-```  
+```
 
 Please, refer to the exported `Events` enum to see the available events.  
 Two commodity methods have been provided to listen to the two most common events: `onHit` and `onMiss`, providing a filter for the given key.
@@ -242,7 +246,6 @@ cache.onMiss((key) => {
   console.log(`The key ${key} has not been found in the cache`);
 });
 ```
-
 
 # How can I get the size of the cache?
 
@@ -257,7 +260,7 @@ cache.size;
 You can get the keys of the cache by using the `keys` method.
 
 ```js
-cache.keys();
+cache.keys;
 ```
 
 # How can I get the values of the cache?
@@ -265,7 +268,7 @@ cache.keys();
 You can get the values of the cache by using the `values` method.
 
 ```js
-cache.values();
+cache.values;
 ```
 
 # How can I get the entries of the cache?
@@ -273,7 +276,7 @@ cache.values();
 You can get the entries ([key, value] pairs) of the cache by using the `entries` method.
 
 ```js
-cache.entries();
+cache.entries;
 ```
 
 # How can I iterate over the cache?
