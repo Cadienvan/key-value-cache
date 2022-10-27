@@ -1,14 +1,19 @@
 {
   "name": "@cadienvan/key-value-cache",
   "private": false,
-  "version": "0.3.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "0.4.0",
+  "main": "dist/cjs/index.js",
+  "module": "dist/mjs/index.js",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js",
+    "default": "./dist/esm/index.js"
+  },
+  "types": "dist/types/index.d.ts",
   "scripts": {
-    "clean": "rm -fr dist",
-    "build": "npm run clean && tsc",
-    "demo-test": "for file in demo/*.js; do node --experimental-specifier-resolution=node $file; done"
+    "clean": "rm -fr ./dist",
+    "build": "npm run clean && mkdir dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && cp package-cjs.json dist/cjs/package.json && cp package-mjs.json dist/mjs/package.json",
+    "demo-test": "for file in demo/*.js; do node $file; done"
   },
   "prepublish": "tsc",
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { KeyValueCache } from "../dist/index";
+const { KeyValueCache } = require('../dist/cjs/index');
 const cache = new KeyValueCache();
 
 cache.onHit('sleep', () => {

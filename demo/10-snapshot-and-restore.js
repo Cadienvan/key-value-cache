@@ -1,5 +1,6 @@
-import { KeyValueCache } from "../dist/index.js";
+const { KeyValueCache } = require('../dist/cjs/index');
 var kvCache = new KeyValueCache();
+
 kvCache.set("users", ["user-1", "user-2", "user-3"]);
 console.log("users", kvCache.get("users"));
 const snap = kvCache.snapshot();

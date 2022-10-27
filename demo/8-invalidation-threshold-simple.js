@@ -1,4 +1,4 @@
-import { KeyValueCache } from "../dist/index.js";
+const { KeyValueCache } = require('../dist/cjs/index');
 const cache = new KeyValueCache();
 const cacheItemKey = ["key1", "key2", "key3", "key4"];
 cache.set(cacheItemKey, "value", 4); // This will store the value in the cache and set the threshold to 4
