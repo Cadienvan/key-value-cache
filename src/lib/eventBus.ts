@@ -1,11 +1,13 @@
 export interface EventCallback {
   (event: Event): void;
 }
+
 type Event = any;
 
 interface Events {
   [key: string]: EventCallback[];
 }
+
 export class EventBus {
   events: Events;
 
