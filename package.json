@@ -13,7 +13,7 @@
     "build": "npm run clean && mkdir dist && tsc -p tsconfig.cjs.json",
     "demo-test": "for file in demo/*.js; do node $file; done"
   },
-  "prepublish": "tsc",
+  "prepublish": "npm run build",
   "devDependencies": {
     "@types/node": "^18.11.7",
     "tsc": "^2.0.4",
