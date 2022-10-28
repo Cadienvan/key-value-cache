@@ -1,7 +1,7 @@
 {
   "name": "@cadienvan/key-value-cache",
   "private": false,
-  "version": "0.4.5",
+  "version": "0.4.6",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -13,7 +13,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -fr ./dist",
-    "build": "npm run clean && mkdir dist && tsc -p tsconfig.cjs.json",
+    "build": "npm run clean && mkdir dist && tsc",
     "demo-test": "for file in demo/*.js; do node $file; done"
   },
   "prepublish": "npm run build",

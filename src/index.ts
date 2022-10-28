@@ -12,7 +12,7 @@ import { CacheItem, TKey, TStrings } from "./types/index";
  * export type TMapCache<T> = Map<string, CacheItem<T>>;
  */
 
-enum Events {
+export enum Events {
   ON_SET = "onSet",
   ON_HIT = "onHit",
   ON_MISS = "onMiss",
@@ -26,7 +26,7 @@ enum Events {
 /**
  * @todo: Construct the strategy interface
  */
-class KeyValueCache {
+export class KeyValueCache {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
   eventBus: EventBus;
   cacheStrategy: MemoryStrategy;
