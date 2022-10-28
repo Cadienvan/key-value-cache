@@ -10,9 +10,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist",
+    "prettier": "prettier --write .",
     "lint": "eslint . --ext .ts",
     "build": "npm run clean && npm run lint && mkdir dist && tsc",
-    "demo-test": "for file in demo/*.js; do node $file; done"
+    "demo-test": "for file in demo/*.js; do node $file; done",
+    "prepare": "husky install"
   },
   "prepublish": "npm run build",
   "devDependencies": {
@@ -20,8 +22,16 @@
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "eslint": "^8.26.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
     "tsc": "^2.0.4",
     "typescript": "^4.8.4"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "npx prettier --write",
+      "npx eslint --fix"
+    ]
   },
   "repository": {
     "type": "git",

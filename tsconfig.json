@@ -6,7 +6,7 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "allowJs": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "Node16",
     "declaration": true,
     "declarationDir": "dist",
     "outDir": "dist",
