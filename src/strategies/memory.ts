@@ -1,13 +1,13 @@
-import { arraify, isPromise } from "../lib/index.js";
-import { CacheStrategy } from "../types/CacheStrategy.js";
-import { CacheItem, TKey, TMapCache, TStrings } from "../types/index.js";
+import { arraify, isPromise } from '../lib/index.js';
+import { CacheStrategy } from '../types/CacheStrategy.js';
+import { CacheItem, TKey, TMapCache, TStrings } from '../types/index.js';
 
 export class MemoryStrategy implements CacheStrategy {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
   appCache: TMapCache;
-  KEY_SEPARATOR = "|||";
+  KEY_SEPARATOR = '|||';
 
-  constructor(keySeparator = "|||") {
+  constructor(keySeparator = '|||') {
     this.appCache = new Map();
     this.KEY_SEPARATOR = keySeparator;
   }
@@ -20,14 +20,20 @@ export class MemoryStrategy implements CacheStrategy {
     return keys.split(this.KEY_SEPARATOR);
   }
 
-  exec(fn: Function, key: TKey, threshold = 1, dependencyKeys: TKey = [], ttl = this.DEFAULT_TTL): Pick<CacheItem, "value"> | Promise<Pick<CacheItem, "value">> {
+  exec(
+    fn: Function,
+    key: TKey,
+    threshold = 1,
+    dependencyKeys: TKey = [],
+    ttl = this.DEFAULT_TTL
+  ): Pick<CacheItem, 'value'> | Promise<Pick<CacheItem, 'value'>> {
     const _keys = arraify(key);
     const _dependencyKeys = arraify(dependencyKeys);
     const cacheDataItemValue = this.get(_keys);
 
     if (cacheDataItemValue) {
       return isPromise(fn)
-        ? new Promise(resolve => {
+        ? new Promise((resolve) => {
             resolve(cacheDataItemValue);
           })
         : cacheDataItemValue;
@@ -35,8 +41,8 @@ export class MemoryStrategy implements CacheStrategy {
       // If we haven't cached it yet, cache it and return it
       const value = fn();
       if (isPromise(value)) {
-        return new Promise(resolve => {
-          value.then(v => {
+        return new Promise((resolve) => {
+          value.then((v) => {
             this.set(_keys, v, threshold, _dependencyKeys, ttl);
             resolve(v);
           });
@@ -48,13 +54,19 @@ export class MemoryStrategy implements CacheStrategy {
     }
   }
 
-  set(key: TStrings, value: any, threshold = 1, dependencyKeys: TStrings = [], ttl = this.DEFAULT_TTL) {
+  set(
+    key: TStrings,
+    value: any,
+    threshold = 1,
+    dependencyKeys: TStrings = [],
+    ttl = this.DEFAULT_TTL
+  ) {
     this.appCache.set(this.getMapKey(key), {
       value,
       dependencyKeys,
       threshold,
       currentInvalidations: 0,
-      ttl: Date.now() + ttl,
+      ttl: Date.now() + ttl
     });
   }
 
@@ -98,8 +110,8 @@ export class MemoryStrategy implements CacheStrategy {
 
     for (const [k, v] of cache) {
       if (key instanceof RegExp) {
-        const check = this.reconstructMapKey(k).some(_k => key.test(_k));
-        const value = v.dependencyKeys.some(_k => key.test(_k));
+        const check = this.reconstructMapKey(k).some((_k) => key.test(_k));
+        const value = v.dependencyKeys.some((_k) => key.test(_k));
         if (check || value) {
           this.invalidate(k);
           invalidatedKeys.push(k);
@@ -116,7 +128,10 @@ export class MemoryStrategy implements CacheStrategy {
     return invalidatedKeys;
   }
 
-  setDependencyKeys(key: string | Array<string>, dependencyKeys: Array<string>) {
+  setDependencyKeys(
+    key: string | Array<string>,
+    dependencyKeys: Array<string>
+  ) {
     const cacheDataItem = this.cached(key);
     if (cacheDataItem) {
       cacheDataItem.dependencyKeys = dependencyKeys;
@@ -133,8 +148,10 @@ export class MemoryStrategy implements CacheStrategy {
         k,
         {
           ...v,
-          currentInvalidations: resetCurrentInvalidations ? 0 : v.currentInvalidations,
-        },
+          currentInvalidations: resetCurrentInvalidations
+            ? 0
+            : v.currentInvalidations
+        }
       ])
     );
   }
@@ -144,19 +161,19 @@ export class MemoryStrategy implements CacheStrategy {
     try {
       JSON.parse(snapshotCache);
     } catch (e) {
-      throw new Error("Invalid snapshot. Could not parse JSON result.");
+      throw new Error('Invalid snapshot. Could not parse JSON result.');
     }
 
     // Check if the parsed snapshot is an array
     const parsedSnapshot = JSON.parse(snapshotCache);
     if (!Array.isArray(parsedSnapshot)) {
-      throw new Error("Invalid snapshot. Snapshot must be an array.");
+      throw new Error('Invalid snapshot. Snapshot must be an array.');
     }
 
     try {
       this.appCache = new Map(parsedSnapshot);
     } catch (e) {
-      throw new Error("Invalid snapshot. Could not restore cache.");
+      throw new Error('Invalid snapshot. Could not restore cache.');
     }
   }
 

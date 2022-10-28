@@ -1,7 +1,7 @@
-import { arraify, EventBus, EventCallback, isPromise } from "./lib/index.js";
-import { MemoryStrategy } from "./strategies/memory.js";
-import { CacheStrategy } from "./types/CacheStrategy.js";
-import { CacheItem, TKey, TStrings } from "./types/index.js";
+import { arraify, EventBus, EventCallback, isPromise } from './lib/index.js';
+import { MemoryStrategy } from './strategies/memory.js';
+import { CacheStrategy } from './types/CacheStrategy.js';
+import { CacheItem, TKey, TStrings } from './types/index.js';
 
 /**
  * @todo
@@ -14,14 +14,14 @@ import { CacheItem, TKey, TStrings } from "./types/index.js";
  */
 
 export enum Events {
-  ON_SET = "onSet",
-  ON_HIT = "onHit",
-  ON_MISS = "onMiss",
-  ON_TTL_EXPIRED = "onTtlExpired",
-  ON_INVALIDATED = "onInvalidated",
-  ON_DELETED = "onDeleted",
-  ON_CLEAR = "onClear",
-  ON_SNAPSHOT_RESTORED = "onSnapshotRestored",
+  ON_SET = 'onSet',
+  ON_HIT = 'onHit',
+  ON_MISS = 'onMiss',
+  ON_TTL_EXPIRED = 'onTtlExpired',
+  ON_INVALIDATED = 'onInvalidated',
+  ON_DELETED = 'onDeleted',
+  ON_CLEAR = 'onClear',
+  ON_SNAPSHOT_RESTORED = 'onSnapshotRestored'
 }
 
 /**
@@ -32,7 +32,7 @@ export class KeyValueCache {
   eventBus: EventBus;
   cacheStrategy: CacheStrategy;
 
-  constructor(strategy?: CacheStrategy, keySeparator = "|||") {
+  constructor(strategy?: CacheStrategy, keySeparator = '|||') {
     if (strategy) {
       this.cacheStrategy = strategy;
     } else {
@@ -41,14 +41,20 @@ export class KeyValueCache {
     this.eventBus = new EventBus();
   }
 
-  exec(fn: Function, key: TKey, threshold = 1, dependencyKeys: TKey = [], ttl = this.DEFAULT_TTL): Pick<CacheItem, "value"> | Promise<Pick<CacheItem, "value">> {
+  exec(
+    fn: Function,
+    key: TKey,
+    threshold = 1,
+    dependencyKeys: TKey = [],
+    ttl = this.DEFAULT_TTL
+  ): Pick<CacheItem, 'value'> | Promise<Pick<CacheItem, 'value'>> {
     const _keys = arraify(key);
     const _dependencyKeys = arraify(dependencyKeys);
     const cacheDataItemValue = this.get(_keys);
 
     if (cacheDataItemValue) {
       return isPromise(fn)
-        ? new Promise(resolve => {
+        ? new Promise((resolve) => {
             resolve(cacheDataItemValue);
           })
         : cacheDataItemValue;
@@ -56,8 +62,8 @@ export class KeyValueCache {
       // If we haven't cached it yet, cache it and return it
       const value = fn();
       if (isPromise(value)) {
-        return new Promise(resolve => {
-          value.then(v => {
+        return new Promise((resolve) => {
+          value.then((v) => {
             this.set(_keys, v, threshold, _dependencyKeys, ttl);
             resolve(v);
           });
@@ -69,8 +75,20 @@ export class KeyValueCache {
     }
   }
 
-  set(key: TKey, value: any, threshold = 1, dependencyKeys: TStrings = [], ttl = this.DEFAULT_TTL) {
-    const resp = this.cacheStrategy.set(arraify(key), value, threshold, dependencyKeys, ttl);
+  set(
+    key: TKey,
+    value: any,
+    threshold = 1,
+    dependencyKeys: TStrings = [],
+    ttl = this.DEFAULT_TTL
+  ) {
+    const resp = this.cacheStrategy.set(
+      arraify(key),
+      value,
+      threshold,
+      dependencyKeys,
+      ttl
+    );
     this.eventBus.emit(Events.ON_SET, key);
     return resp;
   }
@@ -80,7 +98,7 @@ export class KeyValueCache {
     return this.cacheStrategy.cached(_keys);
   };
 
-  get(key: TKey): Pick<CacheItem, "value"> | undefined {
+  get(key: TKey): Pick<CacheItem, 'value'> | undefined {
     const _keys = arraify(key);
     const cacheDataItem = this.cached(key);
     if (cacheDataItem) this.eventBus.emit(Events.ON_HIT, key);
@@ -111,7 +129,7 @@ export class KeyValueCache {
 
   invalidateByKey(key: string | RegExp): TStrings {
     const resp = this.cacheStrategy.invalidateByKey(key);
-    resp.forEach(k => this.eventBus.emit(Events.ON_INVALIDATED, k));
+    resp.forEach((k) => this.eventBus.emit(Events.ON_INVALIDATED, k));
     return resp;
   }
 
@@ -119,7 +137,10 @@ export class KeyValueCache {
     return keys.reduce((acc, key) => acc + this.invalidateByKey(key).length, 0);
   }
 
-  setDependencyKeys(key: string | Array<string>, dependencyKeys: Array<string>) {
+  setDependencyKeys(
+    key: string | Array<string>,
+    dependencyKeys: Array<string>
+  ) {
     return this.cacheStrategy.setDependencyKeys(key, dependencyKeys);
   }
 
@@ -142,13 +163,13 @@ export class KeyValueCache {
   }
 
   onHit(key: TKey, fn: EventCallback) {
-    return this.eventBus.on(Events.ON_HIT, eventData => {
+    return this.eventBus.on(Events.ON_HIT, (eventData) => {
       if (eventData === key) fn(eventData);
     });
   }
 
   onMiss(key: TKey, fn: EventCallback) {
-    return this.eventBus.on(Events.ON_MISS, eventData => {
+    return this.eventBus.on(Events.ON_MISS, (eventData) => {
       if (eventData === key) fn(eventData);
     });
   }
