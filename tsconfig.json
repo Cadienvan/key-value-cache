@@ -1,11 +1,13 @@
 {
-  "extends": "./tsconfig-base.json",
+  "extends": "./tsconfig.cjs.json",
   "compilerOptions": {
     "module": "ES2020",
     "outDir": "dist/mjs",
-    "target": "es5",
-    "moduleResolution": "Node",
+    "target": "es2020",
     "declaration": true,
     "declarationDir": "dist/types"
-  }
+  },
+  "files": ["src/index.ts"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.test.js"]
 }

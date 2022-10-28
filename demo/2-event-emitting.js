@@ -1,4 +1,4 @@
-const { KeyValueCache, Events } = require('../dist/cjs/index');
+const { KeyValueCache, Events } = require('../dist');
 const cache = new KeyValueCache();
 
 cache.onHit('a', () => {

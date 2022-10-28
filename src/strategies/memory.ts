@@ -1,5 +1,5 @@
-import { arraify, isPromise } from "../lib";
-import { CacheItem, TKey, TMapCache, TStrings } from "../types";
+import { arraify, isPromise } from "../lib/index";
+import { CacheItem, TKey, TMapCache, TStrings } from "../types/index";
 
 export class MemoryStrategy {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour

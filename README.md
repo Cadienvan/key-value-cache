@@ -12,12 +12,18 @@ The library provides many functionalities, such as:
 - Invalidation based on threshold: if the cache entry exceeds a certain threshold, the library will invalidate the entry.
 - Event emitting mechanism: you can subscribe to events to be notified when a cache entry is added, removed, invalidated, hit, etc..
 
+The library allows both `ESM` (import) and `CommonJS` (require) importing.  
+Be warned the ESM version currently uses directory import so, in order to correctly execute it, you should call your node app using the experimental specifier resolution flag:  
+`node --experimental-specifier-resolution=node index.js`
+
 ```js
 import { KeyValueCache } from "@cadienvan/key-value-cache";
 const cache = new KeyValueCache();
-const users = await fetchUsers();
-cache.set("users", users);
-cache.setDependencyKeys("users", ["users:1", "users:2"]);
+const users = await cache.exec(fetchUsers, "users");
+cache.setDependencyKeys(
+  "users",
+  users.map(u => `user-${u.id}`)
+);
 await updateUser(2);
 cache.invalidateByKey("users:2");
 const users = cache.get("users"); // This will be invalidated
@@ -90,10 +96,7 @@ If you want to store the result of an async function, just await the result.
 
 ```js
 const cache = new KeyValueCache();
-const result = await cache.exec(
-  async () => asyncLongRunningOperation(),
-  ["asyncLongRunningOperation"]
-); // This will execute the async function and store the result in the cache
+const result = await cache.exec(async () => asyncLongRunningOperation(), ["asyncLongRunningOperation"]); // This will execute the async function and store the result in the cache
 ```
 
 Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method and pass a straight value.
@@ -230,7 +233,7 @@ cache.clear();
 Yes, you can use the `eventBus` inside the cache to listen to events.
 
 ```js
-cache.eventBus.on("onSet", (key) => {
+cache.eventBus.on("onSet", key => {
   console.log(`The key ${key} has been saved in the cache`);
 });
 ```
@@ -239,10 +242,10 @@ Please, refer to the exported `Events` enum to see the available events.
 Two commodity methods have been provided to listen to the two most common events: `onHit` and `onMiss`, providing a filter for the given key.
 
 ```js
-cache.onHit((key) => {
+cache.onHit(key => {
   console.log(`The key ${key} has been found in the cache`);
 });
-cache.onMiss((key) => {
+cache.onMiss(key => {
   console.log(`The key ${key} has not been found in the cache`);
 });
 ```

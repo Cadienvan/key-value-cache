@@ -1,4 +1,4 @@
-const { KeyValueCache } = require('../dist/cjs/index');
+const { KeyValueCache } = require('../dist');
 const { performance } = require('perf_hooks');
 
 var kvCache = new KeyValueCache();

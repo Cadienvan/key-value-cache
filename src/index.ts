@@ -1,7 +1,6 @@
-import { arraify, EventBus, isPromise } from "./lib";
-import { EventCallback } from "./lib/eventBus";
+import { arraify, EventBus, EventCallback, isPromise } from "./lib/index";
 import { MemoryStrategy } from "./strategies/memory";
-import { CacheItem, TKey, TStrings } from "./types";
+import { CacheItem, TKey, TStrings } from "./types/index";
 
 /**
  * @todo

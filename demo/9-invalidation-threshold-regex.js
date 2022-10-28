@@ -1,4 +1,4 @@
-const { KeyValueCache } = require('../dist/cjs/index');
+const { KeyValueCache } = require('../dist');
 var cache = new KeyValueCache();
 
 cache.set(["users"], "USERS");

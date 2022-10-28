@@ -1,9 +1,9 @@
-const { KeyValueCache } = require('../dist/cjs/index');
+const { KeyValueCache } = require('../dist');
 const { performance } = require('perf_hooks');
 var kvCache = new KeyValueCache();
 
 const longRunningOperation = (iterations = 500000000) => {
-  for (let i = 0; i < iterations; i++) {}
+  for (let i = 0; i < iterations; i++) { }
   return true;
 };
 

@@ -1,4 +1,4 @@
-import { KeyValueCache } from '../dist/mjs/index.js';
+import { KeyValueCache } from '../dist/index.js';
 const cache = new KeyValueCache();
 
 cache.set('key', 'value');
