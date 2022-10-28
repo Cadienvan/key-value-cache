@@ -168,3 +168,6 @@ export class KeyValueCache {
     return this.cacheStrategy.values;
   }
 }
+module.exports = KeyValueCache;
+module.exports.KeyValueCache = KeyValueCache;
+module.exports.default = KeyValueCache;
