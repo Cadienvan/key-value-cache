@@ -3,16 +3,13 @@
   "private": false,
   "version": "0.4.6",
   "main": "dist/index.js",
+  "type": "module",
   "files": [
     "dist"
   ],
-  "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/index.js"
-  },
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "rm -fr ./dist",
+    "clean": "rm -rf ./dist",
     "build": "npm run clean && mkdir dist && tsc",
     "demo-test": "for file in demo/*.js; do node $file; done"
   },
