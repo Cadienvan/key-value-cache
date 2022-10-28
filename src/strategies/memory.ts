@@ -97,7 +97,7 @@ export class MemoryStrategy implements CacheStrategy {
   }
 
   invalidate(key: string): void {
-    let [cacheKey, cacheDataItem] = [key, this.cached(key)];
+    const [cacheKey, cacheDataItem] = [key, this.cached(key)];
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
@@ -105,7 +105,7 @@ export class MemoryStrategy implements CacheStrategy {
     }
   }
   invalidateByKey(key: string | RegExp): TStrings {
-    let invalidatedKeys = [];
+    const invalidatedKeys = [];
     const cache = Array.from(this.entries);
 
     for (const [k, v] of cache) {

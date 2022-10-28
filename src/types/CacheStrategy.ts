@@ -23,7 +23,7 @@ export interface CacheStrategy {
     dependencyKeys: Array<string>
   ): void;
   clear(): void;
-  snapshot(resetCurrentInvalidations?: boolean): String;
+  snapshot(resetCurrentInvalidations?: boolean): string;
   restore(snapshotCache: string): void;
   size: number;
   keys: IterableIterator<string>;

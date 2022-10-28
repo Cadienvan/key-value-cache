@@ -99,7 +99,6 @@ export class KeyValueCache {
   };
 
   get(key: TKey): Pick<CacheItem, 'value'> | undefined {
-    const _keys = arraify(key);
     const cacheDataItem = this.cached(key);
     if (cacheDataItem) this.eventBus.emit(Events.ON_HIT, key);
     else this.eventBus.emit(Events.ON_MISS, key);
@@ -118,7 +117,7 @@ export class KeyValueCache {
   }
 
   invalidate(key: string): void {
-    let [cacheKey, cacheDataItem] = [key, this.cached(key)];
+    const [cacheKey, cacheDataItem] = [key, this.cached(key)];
     if (!cacheDataItem) return;
     cacheDataItem.currentInvalidations++;
     this.eventBus.emit(Events.ON_INVALIDATED, key);
@@ -158,7 +157,7 @@ export class KeyValueCache {
       this.cacheStrategy.restore(snapshotCache);
       this.eventBus.emit(Events.ON_SNAPSHOT_RESTORED, {});
     } catch (e) {
-      console.error(e);
+      throw new Error(e);
     }
   }
 

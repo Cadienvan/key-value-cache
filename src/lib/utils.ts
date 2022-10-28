@@ -3,5 +3,5 @@ export function arraify(value: any) {
 }
 
 export function isPromise(p: any): p is Promise<any> {
-  return p && typeof p.then === 'function';
+  return p && typeof p.then === "function";
 }
