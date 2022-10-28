@@ -1,4 +1,4 @@
-const { KeyValueCache, Events } = require('../dist');
+import { KeyValueCache, Events } from '../dist/index.js';
 const cache = new KeyValueCache();
 
 cache.set(

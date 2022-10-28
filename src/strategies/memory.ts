@@ -1,7 +1,8 @@
-import { arraify, isPromise } from "../lib/index";
-import { CacheItem, TKey, TMapCache, TStrings } from "../types/index";
+import { arraify, isPromise } from "../lib/index.js";
+import { CacheStrategy } from "../types/CacheStrategy.js";
+import { CacheItem, TKey, TMapCache, TStrings } from "../types/index.js";
 
-export class MemoryStrategy {
+export class MemoryStrategy implements CacheStrategy {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
   appCache: TMapCache;
   KEY_SEPARATOR = "|||";

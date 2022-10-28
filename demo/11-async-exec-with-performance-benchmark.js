@@ -1,5 +1,5 @@
-const { KeyValueCache } = require('../dist');
-const { performance } = require('perf_hooks');
+import { KeyValueCache } from '../dist/index.js';
+import { performance } from 'perf_hooks';
 
 var kvCache = new KeyValueCache();
 

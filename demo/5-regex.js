@@ -1,4 +1,4 @@
-const { KeyValueCache } = require('../dist');
+import { KeyValueCache } from '../dist/index.js';
 const cache = new KeyValueCache();
 
 

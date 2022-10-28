@@ -1,4 +1,4 @@
-const { KeyValueCache } = require('../dist');
+import { KeyValueCache } from '../dist/index.js';
 var kvCache = new KeyValueCache();
 
 kvCache.set("users", ["user-1", "user-2", "user-3"]);
