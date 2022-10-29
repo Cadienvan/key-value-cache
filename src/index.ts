@@ -21,7 +21,8 @@ export enum Events {
   ON_INVALIDATED = 'onInvalidated',
   ON_DELETED = 'onDeleted',
   ON_CLEAR = 'onClear',
-  ON_SNAPSHOT_RESTORED = 'onSnapshotRestored'
+  ON_SNAPSHOT_RESTORED = 'onSnapshotRestored',
+  ON_SNAPSHOT_RESTORE_FAILED = 'onSnapshotRestoreFailed'
 }
 
 /**
@@ -156,8 +157,8 @@ export class KeyValueCache {
     try {
       this.cacheStrategy.restore(snapshotCache);
       this.eventBus.emit(Events.ON_SNAPSHOT_RESTORED, {});
-    } catch (e) {
-      throw new Error(e);
+    } catch (e: unknown) {
+      this.eventBus.emit(Events.ON_SNAPSHOT_RESTORE_FAILED, e);
     }
   }
 

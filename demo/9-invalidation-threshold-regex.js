@@ -1,4 +1,4 @@
-import { KeyValueCache } from '../dist/index.js';
+const { KeyValueCache } = require('@cadienvan/key-value-cache');
 var cache = new KeyValueCache();
 
 cache.set(["users"], "USERS");

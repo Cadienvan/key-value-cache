@@ -1,18 +1,14 @@
 {
   "compilerOptions": {
-    "module": "ES2020",
+    "declaration": true,
+    "target": "esnext",
+    "lib": ["esnext", "dom"],
+    "strict": true,
     "noImplicitAny": false,
     "removeComments": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "allowJs": true,
-    "moduleResolution": "node16",
-    "declaration": true,
-    "declarationDir": "dist",
-    "outDir": "dist",
-    "target": "es6"
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "outDir": "dist"
   },
-  "files": ["src/index.ts"],
-  "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.test.js"]
 }

@@ -105,7 +105,7 @@ export class MemoryStrategy implements CacheStrategy {
     }
   }
   invalidateByKey(key: string | RegExp): TStrings {
-    const invalidatedKeys = [];
+    const invalidatedKeys: Array<string> = [];
     const cache = Array.from(this.entries);
 
     for (const [k, v] of cache) {

@@ -1,4 +1,4 @@
-import { KeyValueCache } from '../dist/index.js';
+const { KeyValueCache } = require('@cadienvan/key-value-cache');
 const cache = new KeyValueCache();
 
 cache.onHit('sleep', () => {
