@@ -1,4 +1,4 @@
 // export all allow import only from "./lib"
 
-export { arraify, isPromise } from './utils.js';
-export { EventBus, EventCallback } from './eventBus.js';
+export { arraify, isPromise } from './utils';
+export { EventBus, EventCallback } from './eventBus';

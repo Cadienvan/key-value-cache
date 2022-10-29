@@ -1,8 +1,8 @@
-import { TKey, CacheItem, TStrings } from './index.js';
+import { TKey, CacheItem, TStrings } from '.';
 
 // Create an interface for the CacheStrategy class starting from the file memory.ts
 export interface CacheStrategy {
-  get(key: TKey): Pick<CacheItem, 'value'> | null | undefined;
+  get(key: TKey): Pick<CacheItem, 'value'> | null;
   set(
     key: TKey,
     value: any,
@@ -10,11 +10,11 @@ export interface CacheStrategy {
     dependencyKeys?: TStrings,
     ttl?: number
   ): void;
-  cached(key: TKey): CacheItem | null | undefined;
+  cached(key: TKey): CacheItem | null;
   has(key: TKey): boolean;
   delete(key: TKey): void;
   invalidateByKey(key: string | RegExp): TStrings;
-  invalidate(key: string): void;
+  invalidate(key: string): boolean;
   entries: IterableIterator<[string, CacheItem]>;
   reconstructMapKey(key: string): TStrings;
   getMapKey(key: TStrings): string;

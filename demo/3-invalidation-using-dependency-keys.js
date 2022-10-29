@@ -13,4 +13,4 @@ console.log(cache.get('users')); // This will print the users array
 
 cache.invalidateByKey('user-1');
 console.log('\n\n**********');
-console.log(cache.get('users')); // This will print undefined as the dependency key "user-1" invalidated the "users" key
+console.log(cache.get('users')); // This will print null as the dependency key "user-1" invalidated the "users" key

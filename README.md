@@ -133,7 +133,7 @@ cache.get('key'); // This will return the value
 cache.invalidateByKey('key'); // This won't invalidate the item, but will increase the invalidation counter.
 cache.get('key'); // This will return the value
 cache.invalidateByKey('key'); // This will invalidate the item as the defined threshold of two is reached.
-cache.get('key'); // This will return undefined
+cache.get('key'); // This will return null
 ```
 
 Remember to use the `invalidateByKey` method to increase the invalidation counter, while the `delete` method will delete the item from the cache independently from the defined threshold.
@@ -151,7 +151,7 @@ const cache = new KeyValueCache();
 cache.set('key', 'value', 1, [], 1000); // This will store the value in the cache and set the TTL to 1000ms
 cache.get('key'); // This will return the value
 await sleep(1000); // This will wait for 1000ms
-cache.get('key'); // This will return undefined
+cache.get('key'); // This will return null
 ```
 
 # What is the difference between the `invalidate` and `invalidateByKey` methods?
@@ -164,11 +164,11 @@ const cache = new KeyValueCache();
 cache.set('key', 'value', 1, ['depKey']); // This will store the value in the cache.
 cache.get('key'); // This will return the value
 cache.invalidate('key'); // This will invalidate the item
-cache.get('key'); // This will return undefined
+cache.get('key'); // This will return null
 cache.set('key', 'value', 1, ['depKey']); // This will store the value in the cache.
 cache.get('key'); // This will return the value
 cache.invalidateByKey('depKey'); // This will invalidate the item
-cache.get('key'); // This will return undefined
+cache.get('key'); // This will return null
 ```
 
 # How can I define a dependency array for invalidation?
@@ -181,7 +181,7 @@ const cache = new KeyValueCache();
 cache.set('key', 'value', 1, ['dependency1', 'dependency2']); // This will store the value in the cache and set the threshold to 2
 cache.get('key'); // This will return the value
 cache.invalidateByKey('dependency1'); // This will invalidate the item as the dependency1 is in the dependency array.
-cache.get('key'); // This will return undefined
+cache.get('key'); // This will return null
 ```
 
 You can also set the dependency array using the `setDependencies` method.

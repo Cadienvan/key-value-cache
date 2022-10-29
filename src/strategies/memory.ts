@@ -1,6 +1,6 @@
-import { arraify, isPromise } from '../lib/index.js';
-import { CacheStrategy } from '../types/CacheStrategy.js';
-import { CacheItem, TKey, TMapCache, TStrings } from '../types/index.js';
+import { arraify, isPromise } from '../lib';
+import { CacheStrategy } from '../types/CacheStrategy';
+import { CacheItem, TKey, TMapCache, TStrings } from '../types';
 
 export class MemoryStrategy implements CacheStrategy {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
@@ -20,40 +20,6 @@ export class MemoryStrategy implements CacheStrategy {
     return keys.split(this.KEY_SEPARATOR);
   }
 
-  exec(
-    fn: Function,
-    key: TKey,
-    threshold = 1,
-    dependencyKeys: TKey = [],
-    ttl = this.DEFAULT_TTL
-  ): Pick<CacheItem, 'value'> | Promise<Pick<CacheItem, 'value'>> {
-    const _keys = arraify(key);
-    const _dependencyKeys = arraify(dependencyKeys);
-    const cacheDataItemValue = this.get(_keys);
-
-    if (cacheDataItemValue) {
-      return isPromise(fn)
-        ? new Promise((resolve) => {
-            resolve(cacheDataItemValue);
-          })
-        : cacheDataItemValue;
-    } else {
-      // If we haven't cached it yet, cache it and return it
-      const value = fn();
-      if (isPromise(value)) {
-        return new Promise((resolve) => {
-          value.then((v) => {
-            this.set(_keys, v, threshold, _dependencyKeys, ttl);
-            resolve(v);
-          });
-        });
-      }
-      // If fn isn't a promise, store the value and return it.
-      this.set(_keys, value, threshold, _dependencyKeys, ttl);
-      return value;
-    }
-  }
-
   set(
     key: TStrings,
     value: any,
@@ -71,38 +37,38 @@ export class MemoryStrategy implements CacheStrategy {
   }
 
   cached = (key: TKey) => {
-    const _keys = arraify(key);
-    return this.appCache.get(this.getMapKey(_keys));
+    let response = this.appCache.get(this.getMapKey(arraify(key))) || null;
+    if (response && response.ttl < Date.now()) {
+      this.delete(key);
+      response = null;
+    }
+    return response;
   };
 
-  get = (key: TStrings) => {
+  get = (key: TKey) => {
     const cacheDataItem = this.cached(key);
-    if (cacheDataItem) {
-      if (cacheDataItem.ttl < Date.now()) {
-        this.appCache.delete(this.getMapKey(key));
-        return null;
-      }
-      return cacheDataItem.value;
-    }
-    return null;
+    return cacheDataItem?.value ?? null;
   };
 
   has(key: TStrings) {
     return this.appCache.has(this.getMapKey(key));
   }
 
-  delete(key: TStrings) {
-    const resp = this.appCache.delete(this.getMapKey(key));
+  delete(key: TKey) {
+    const resp = this.appCache.delete(this.getMapKey(arraify(key)));
     return resp;
   }
 
-  invalidate(key: string): void {
-    const [cacheKey, cacheDataItem] = [key, this.cached(key)];
-    if (!cacheDataItem) return;
+  invalidate(key: string): boolean {
+    let invalidated = false;
+    const [cacheKey, cacheDataItem] = [key, this.cached(arraify(key))];
+    if (!cacheDataItem) return false;
     cacheDataItem.currentInvalidations++;
+    invalidated = true;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
       this.appCache.delete(cacheKey);
     }
+    return invalidated;
   }
   invalidateByKey(key: string | RegExp): TStrings {
     const invalidatedKeys: Array<string> = [];
@@ -128,11 +94,8 @@ export class MemoryStrategy implements CacheStrategy {
     return invalidatedKeys;
   }
 
-  setDependencyKeys(
-    key: string | Array<string>,
-    dependencyKeys: Array<string>
-  ) {
-    const cacheDataItem = this.cached(key);
+  setDependencyKeys(key: TKey, dependencyKeys: TStrings) {
+    const cacheDataItem = this.cached(arraify(key));
     if (cacheDataItem) {
       cacheDataItem.dependencyKeys = dependencyKeys;
     }

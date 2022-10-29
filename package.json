@@ -1,7 +1,7 @@
 {
   "name": "@cadienvan/key-value-cache",
   "private": false,
-  "version": "0.5.1",
+  "version": "0.6.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,19 +21,23 @@
     "demo-test": "for file in demo/*.js; do node $file; done",
     "prettier": "prettier --write .",
     "lint": "eslint . --ext .ts",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "jest --no-cache"
   },
   "prepublish": "npm run build",
   "devDependencies": {
+    "@types/jest": "^29.2.0",
     "@types/node": "^18.11.7",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "esbuild": "^0.15.12",
     "eslint": "^8.26.0",
     "husky": "^8.0.1",
+    "jest": "^29.2.2",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
+    "ts-jest": "^29.0.3",
     "tsc": "^2.0.4",
     "typescript": "^4.8.4"
   },
@@ -47,5 +51,12 @@
     "type": "git",
     "url": "git://github.com/Cadienvan/key-value-cache.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "author": "Cadienvan <cadienvan@gmail.com>",
+  "contributors": [
+    {
+      "name": "Antonio Caputo",
+      "url": "https://github.com/tonycaputome"
+    }
+  ]
 }

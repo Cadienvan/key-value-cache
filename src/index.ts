@@ -1,7 +1,7 @@
-import { arraify, EventBus, EventCallback, isPromise } from './lib/index.js';
-import { MemoryStrategy } from './strategies/memory.js';
-import { CacheStrategy } from './types/CacheStrategy.js';
-import { CacheItem, TKey, TStrings } from './types/index.js';
+import { arraify, EventBus, EventCallback, isPromise } from './lib';
+import { MemoryStrategy } from './strategies/memory';
+import { CacheStrategy } from './types/CacheStrategy';
+import { CacheItem, TKey, TStrings } from './types';
 
 /**
  * @todo
@@ -94,16 +94,11 @@ export class KeyValueCache {
     return resp;
   }
 
-  cached = (key: TKey) => {
-    const _keys = arraify(key);
-    return this.cacheStrategy.cached(_keys);
-  };
-
-  get(key: TKey): Pick<CacheItem, 'value'> | undefined {
-    const cacheDataItem = this.cached(key);
+  get(key: TKey): Pick<CacheItem, 'value'> | null {
+    const cacheDataItem = this.cacheStrategy.get(key);
     if (cacheDataItem) this.eventBus.emit(Events.ON_HIT, key);
     else this.eventBus.emit(Events.ON_MISS, key);
-    return cacheDataItem && cacheDataItem.value;
+    return cacheDataItem;
   }
 
   has(key: TKey) {
@@ -115,16 +110,6 @@ export class KeyValueCache {
     const resp = this.cacheStrategy.delete(_keys);
     this.eventBus.emit(Events.ON_DELETED, key);
     return resp;
-  }
-
-  invalidate(key: string): void {
-    const [cacheKey, cacheDataItem] = [key, this.cached(key)];
-    if (!cacheDataItem) return;
-    cacheDataItem.currentInvalidations++;
-    this.eventBus.emit(Events.ON_INVALIDATED, key);
-    if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
-      this.cacheStrategy.delete([cacheKey]);
-    }
   }
 
   invalidateByKey(key: string | RegExp): TStrings {
