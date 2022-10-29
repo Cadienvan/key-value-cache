@@ -1,7 +1,6 @@
 import { arraify, EventBus, EventCallback, isPromise } from './lib';
 import { MemoryStrategy } from './strategies/memory';
-import { CacheStrategy } from './types/CacheStrategy';
-import { CacheItem, TKey, TStrings } from './types';
+import { CacheItem, TKey, TStrings, Events, CacheStrategy } from './types';
 
 /**
  * @todo
@@ -12,18 +11,6 @@ import { CacheItem, TKey, TStrings } from './types';
  * appCache: TMapCache<T> ... and so on
  * export type TMapCache<T> = Map<string, CacheItem<T>>;
  */
-
-export enum Events {
-  ON_SET = 'onSet',
-  ON_HIT = 'onHit',
-  ON_MISS = 'onMiss',
-  ON_TTL_EXPIRED = 'onTtlExpired',
-  ON_INVALIDATED = 'onInvalidated',
-  ON_DELETED = 'onDeleted',
-  ON_CLEAR = 'onClear',
-  ON_SNAPSHOT_RESTORED = 'onSnapshotRestored',
-  ON_SNAPSHOT_RESTORE_FAILED = 'onSnapshotRestoreFailed'
-}
 
 /**
  * @todo: Construct the strategy interface
@@ -42,6 +29,15 @@ export class KeyValueCache {
     this.eventBus = new EventBus();
   }
 
+  /**
+   * @name exec
+   *
+   * @description
+   * ...
+   *
+   * @param {function} fn ...
+   * @param {TKey} key ...
+   */
   exec(
     fn: Function,
     key: TKey,
@@ -76,6 +72,14 @@ export class KeyValueCache {
     }
   }
 
+  /**
+   * @name set
+   *
+   * @description
+   * ...
+   *
+   * @param {TKey} key ...
+   */
   set(
     key: TKey,
     value: any,
@@ -94,6 +98,14 @@ export class KeyValueCache {
     return resp;
   }
 
+  /**
+   * @name get
+   *
+   * @description
+   * ...
+   *
+   * @param {TKey} key ...
+   */
   get(key: TKey): Pick<CacheItem, 'value'> | null {
     const cacheDataItem = this.cacheStrategy.get(key);
     if (cacheDataItem) this.eventBus.emit(Events.ON_HIT, key);
@@ -101,10 +113,25 @@ export class KeyValueCache {
     return cacheDataItem;
   }
 
+  /**
+   * @name has
+   *
+   * @description
+   * ...
+   *
+   * @param {TKey} key ...
+   */
   has(key: TKey) {
     return this.cacheStrategy.has(arraify(key));
   }
-
+  /**
+   * @name delete
+   *
+   * @description
+   * ...
+   *
+   * @param {TKey} key ...
+   */
   delete(key: TKey) {
     const _keys = arraify(key);
     const resp = this.cacheStrategy.delete(_keys);
@@ -112,32 +139,70 @@ export class KeyValueCache {
     return resp;
   }
 
+  /**
+   * @name invalidateByKey
+   *
+   * @description
+   * ...
+   *
+   * @param {string | RegExp} key ...
+   */
   invalidateByKey(key: string | RegExp): TStrings {
     const resp = this.cacheStrategy.invalidateByKey(key);
     resp.forEach((k) => this.eventBus.emit(Events.ON_INVALIDATED, k));
     return resp;
   }
 
+  /**
+   * @name invalidateByKeys
+   *
+   * @description
+   * ...
+   *
+   * @param {Array<string | RegExp>} keys ...
+   */
   invalidateByKeys(keys: Array<string | RegExp>): number {
     return keys.reduce((acc, key) => acc + this.invalidateByKey(key).length, 0);
   }
-
-  setDependencyKeys(
-    key: string | Array<string>,
-    dependencyKeys: Array<string>
-  ) {
+  /**
+   * @name setDependencyKeys
+   *
+   * @description
+   * ...
+   *
+   * @param {string | Array<string>} key ...
+   * @param {Array<string>} dependencyKeys ...
+   */
+  setDependencyKeys(key: string | TStrings, dependencyKeys: TStrings) {
     return this.cacheStrategy.setDependencyKeys(key, dependencyKeys);
   }
-
+  /**
+   * @name clear
+   *
+   * @@description
+   * ...
+   */
   clear() {
     this.cacheStrategy.clear();
     this.eventBus.emit(Events.ON_CLEAR, {});
   }
 
+  /**
+   * @name snapshot
+   *
+   * @@description
+   * ...
+   */
   snapshot(resetCurrentInvalidations = false) {
     return this.cacheStrategy.snapshot(resetCurrentInvalidations);
   }
 
+  /**
+   * @name restore
+   *
+   * @@description
+   * ...
+   */
   restore(snapshotCache: string) {
     try {
       this.cacheStrategy.restore(snapshotCache);
@@ -146,13 +211,23 @@ export class KeyValueCache {
       this.eventBus.emit(Events.ON_SNAPSHOT_RESTORE_FAILED, e);
     }
   }
-
+  /**
+   * @name onHit
+   *
+   * @@description
+   * ...
+   */
   onHit(key: TKey, fn: EventCallback) {
     return this.eventBus.on(Events.ON_HIT, (eventData) => {
       if (eventData === key) fn(eventData);
     });
   }
-
+  /**
+   * @name onMiss
+   *
+   * @@description
+   * ...
+   */
   onMiss(key: TKey, fn: EventCallback) {
     return this.eventBus.on(Events.ON_MISS, (eventData) => {
       if (eventData === key) fn(eventData);

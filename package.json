@@ -16,12 +16,13 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "ts-types": " tsc --emitDeclarationOnly --outDir dist",
-    "build": "npm run lint && rimraf dist && node ./esbuild.js && npm run ts-types",
+    "ts-types": "tsc --emitDeclarationOnly --outDir dist",
+    "build": "npm run lint && rimraf dist && node esbuild.js && npm run ts-types",
     "demo-test": "for file in demo/*.js; do node $file; done",
     "prettier": "prettier --write .",
     "lint": "eslint . --ext .ts",
     "prepare": "husky install",
+    "dev": "jest --watch",
     "test": "jest --no-cache"
   },
   "prepublish": "npm run build",
@@ -38,7 +39,6 @@
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
-    "tsc": "^2.0.4",
     "typescript": "^4.8.4"
   },
   "lint-staged": {
@@ -59,5 +59,8 @@
       "name": "Antonio Caputo",
       "url": "https://github.com/tonycaputome"
     }
-  ]
+  ],
+  "dependencies": {
+    "global": "^4.4.0"
+  }
 }
