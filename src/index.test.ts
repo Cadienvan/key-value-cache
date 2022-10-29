@@ -24,6 +24,13 @@ describe('KeyValueCache', () => {
     expect(cache.get('test')).toBe('value');
   });
 
+  it('should be able to clear the cache', () => {
+    const cache = new KeyValueCache();
+    cache.set('test', 'value');
+    cache.clear();
+    expect(cache.get('test')).toBeNull();
+  });
+
   it('should be able to set a value and a ttl', async () => {
     const cache = new KeyValueCache();
     cache.set('test', 'value', 1, [], 1000);
@@ -31,7 +38,7 @@ describe('KeyValueCache', () => {
     await sleep(500);
     expect(cache.get('test')).toBe('value');
     await sleep(700);
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to set a value with a threshold', () => {
@@ -41,7 +48,7 @@ describe('KeyValueCache', () => {
     cache.invalidateByKey('test');
     expect(cache.get('test')).toBe('value');
     cache.invalidateByKey('test');
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to set a value with a threshold and dependencies', () => {
@@ -51,7 +58,7 @@ describe('KeyValueCache', () => {
     cache.invalidateByKey('dependency');
     expect(cache.get('test')).toBe('value');
     cache.invalidateByKey('dependency');
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to set a value with a threshold and dependencies and ttl', () => {
@@ -61,7 +68,7 @@ describe('KeyValueCache', () => {
     cache.invalidateByKey('dependency');
     expect(cache.get('test')).toBe('value');
     cache.invalidateByKey('dependency');
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to invalidate multiple keys', () => {
@@ -73,9 +80,13 @@ describe('KeyValueCache', () => {
     expect(cache.get('test2')).toBe('value');
     expect(cache.get('test3')).toBe('value');
     cache.invalidateByKeys([/dependency.+/]);
-    expect(cache.get('test')).toBe(null);
-    expect(cache.get('test2')).toBe(null);
-    expect(cache.get('test3')).toBe(null);
+    expect(cache.get('test')).toBe('value');
+    expect(cache.get('test2')).toBe('value');
+    expect(cache.get('test3')).toBe('value');
+    cache.invalidateByKeys([/dependency.+/]);
+    expect(cache.get('test')).toBeNull();
+    expect(cache.get('test2')).toBeNull();
+    expect(cache.get('test3')).toBeNull();
   });
 
   it('should be able to delete a key', () => {
@@ -83,25 +94,25 @@ describe('KeyValueCache', () => {
     cache.set('test', 'value');
     expect(cache.get('test')).toBe('value');
     cache.delete('test');
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to output entries', () => {
     const cache = new KeyValueCache();
     cache.set('test', 'value');
-    expect(cache.entries).toBeInstanceOf(Array);
+    expect(cache.entries).toBeInstanceOf(Object);
   });
 
   it('should be able to output keys', () => {
     const cache = new KeyValueCache();
     cache.set('test', 'value');
-    expect(cache.keys).toBeInstanceOf(Array);
+    expect(cache.keys).toBeInstanceOf(Object);
   });
 
   it('should be able to output values', () => {
     const cache = new KeyValueCache();
     cache.set('test', 'value');
-    expect(cache.values).toBeInstanceOf(Array);
+    expect(cache.values).toBeInstanceOf(Object);
   });
 
   it('should be able to output size', () => {
@@ -139,6 +150,7 @@ describe('KeyValueCache', () => {
     expect(cache.get('test')).toBe('value');
     cache.invalidateByKey('test');
     expect(cache.get('test')).toBe('value');
+    cache.invalidateByKey('test');
     cache.exec(fn, 'test', 2);
     expect(fn).toBeCalledTimes(2);
     expect(cache.get('test')).toBe('value');
@@ -205,7 +217,7 @@ describe('KeyValueCache', () => {
     expect(fn).toBeCalledTimes(1);
     expect(cache.get('test')).toBe('value');
     cache.invalidateByKey('dependency');
-    expect(cache.get('test')).toBe(null);
+    expect(cache.get('test')).toBeNull();
   });
 
   it('should be able to exec an async function with a threshold and dependencies and ttl', async () => {
