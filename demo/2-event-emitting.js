@@ -1,5 +1,5 @@
-const { KeyValueCache, Events } = require('@cadienvan/key-value-cache');
-const cache = new KeyValueCache();
+const { SyncKeyValueCache, Events } = require('../dist')
+const cache = new SyncKeyValueCache();
 
 cache.onHit('a', () => {
   console.log('a hit');

@@ -18,7 +18,7 @@ Be warned the ESM version currently uses directory import so, in order to correc
 
 ```js
 import { KeyValueCache } from '@cadienvan/key-value-cache';
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 const users = await cache.exec(fetchUsers, 'users');
 cache.setDependencyKeys(
   'users',
@@ -31,7 +31,7 @@ const users = cache.get('users'); // This will be invalidated
 
 ```js
 import { KeyValueCache } from '@cadienvan/key-value-cache';
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 const users = await fetchUsers();
 cache.set('users', users, 2); // Define a threshold of 2
 cache.setDependencyKeys('users', ['users:1', 'users:2', 'users:3', 'users:4']);
@@ -59,7 +59,7 @@ You can import and instance a new KeyValueCache object as follows:
 
 ```js
 import { KeyValueCache } from '@cadienvan/key-value-cache';
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 ```
 
 Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept considering both synchronous and asynchronous functions.
@@ -83,7 +83,7 @@ It firstly searches for the key in the cache, if it is not found, it executes th
 In case the key is an array, it searches for a complete match in the cache.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.exec(() => {
   return longRunningOperation();
 }, ['longRunningOperation']); // This will execute the function and store the result in the cache
@@ -95,7 +95,7 @@ cache.exec(() => {
 If you want to store the result of an async function, just await the result.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 const result = await cache.exec(
   async () => asyncLongRunningOperation(),
   ['asyncLongRunningOperation']
@@ -114,7 +114,7 @@ As per the question above, the `exec` method will return the result directly fro
 If you want to retrieve the result directly from the cache, you can use the `get` method.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.exec(() => {
   return longRunningOperation();
 }, ['longRunningOperation']); // This will execute the function and store the result in the cache
@@ -127,7 +127,7 @@ You can simply pass a threshold as the third parameter of the `exec` and `set` m
 When the threshold is reached, the item is invalidated.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.set('key', 'value', 2); // This will store the value in the cache and set the threshold to 2
 cache.get('key'); // This will return the value
 cache.invalidateByKey('key'); // This won't invalidate the item, but will increase the invalidation counter.
@@ -147,7 +147,7 @@ As long as the item isn't requested, it will stay there.
 Future updates will provide some sort of background job to invalidate the items.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.set('key', 'value', 1, [], 1000); // This will store the value in the cache and set the TTL to 1000ms
 cache.get('key'); // This will return the value
 await sleep(1000); // This will wait for 1000ms
@@ -160,7 +160,7 @@ The first one will search for exact match between given key and the cache key.
 The second one will search both in the primary keys and in the dependency keys.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.set('key', 'value', 1, ['depKey']); // This will store the value in the cache.
 cache.get('key'); // This will return the value
 cache.invalidate('key'); // This will invalidate the item
@@ -177,7 +177,7 @@ You can simply pass a dependency array as the fourth parameter of the `exec` and
 When the dependency array is defined, the item is invalidated when one of the dependencies is invalidated.
 
 ```js
-const cache = new KeyValueCache();
+const cache = new SyncKeyValueCache();
 cache.set('key', 'value', 1, ['dependency1', 'dependency2']); // This will store the value in the cache and set the threshold to 2
 cache.get('key'); // This will return the value
 cache.invalidateByKey('dependency1'); // This will invalidate the item as the dependency1 is in the dependency array.

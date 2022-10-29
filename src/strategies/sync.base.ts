@@ -1,8 +1,7 @@
-import { arraify, isPromise } from '../lib';
-import { CacheStrategy } from '../types/CacheStrategy';
-import { CacheItem, TKey, TMapCache, TStrings } from '../types';
+import { arraify } from '../lib';
+import { TKey, TMapCache, TStrings, SyncCacheStrategy } from '../types';
 
-export class MemoryStrategy implements CacheStrategy {
+export class SyncBaseStrategy implements SyncCacheStrategy {
   DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
   appCache: TMapCache;
   KEY_SEPARATOR = '|||';
@@ -55,8 +54,7 @@ export class MemoryStrategy implements CacheStrategy {
   }
 
   delete(key: TKey) {
-    const resp = this.appCache.delete(this.getMapKey(arraify(key)));
-    return resp;
+    return this.appCache.delete(this.getMapKey(arraify(key)));
   }
 
   invalidate(key: string): boolean {
@@ -66,7 +64,7 @@ export class MemoryStrategy implements CacheStrategy {
     cacheDataItem.currentInvalidations++;
     invalidated = true;
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
-      this.appCache.delete(cacheKey);
+      this.delete(cacheKey);
     }
     return invalidated;
   }

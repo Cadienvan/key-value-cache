@@ -1,12 +1,12 @@
-const { KeyValueCache } = require('@cadienvan/key-value-cache');
-var kvCache = new KeyValueCache();
+const { SyncKeyValueCache } = require('../dist')
+var kvCache = new SyncKeyValueCache();
 
 kvCache.set('users', ['user-1', 'user-2', 'user-3']);
 console.log('users', kvCache.get('users'));
 const snap = kvCache.snapshot();
 console.log('snap', snap);
 
-var kvCache2 = new KeyValueCache();
+var kvCache2 = new SyncKeyValueCache();
 kvCache2.restore(snap);
 kvCache2.set('users', ['user-1', 'user-2', 'user-3', 'user-4']);
 console.log('users kvCache', kvCache.get('users'));

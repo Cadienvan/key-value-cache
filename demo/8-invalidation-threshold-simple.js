@@ -1,5 +1,5 @@
-const { KeyValueCache } = require('@cadienvan/key-value-cache');
-const cache = new KeyValueCache();
+const { SyncKeyValueCache } = require('../dist')
+const cache = new SyncKeyValueCache();
 const cacheItemKey = ['key1', 'key2', 'key3', 'key4'];
 cache.set(cacheItemKey, 'value', 4); // This will store the value in the cache and set the threshold to 4
 console.log('value: ', cache.get(cacheItemKey)); // This will return the value

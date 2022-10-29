@@ -8,11 +8,12 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "no-console": 2,
-    "no-debugger": 2,
+    "no-console": 1,
+    "no-debugger": 1,
     "no-var": 2,
-    "no-unused-vars": 0,
+    "no-unused-vars": 1,
     "@typescript-eslint/no-explicit-any": 0,
-    "@typescript-eslint/ban-types": 0
+    "@typescript-eslint/ban-types": 0,
+    "@typescript-eslint/ban-ts-comment": 1
   }
 }

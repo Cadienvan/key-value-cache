@@ -1,7 +1,6 @@
 import { TKey, CacheItem, TStrings } from '.';
 
-// Create an interface for the CacheStrategy class starting from the file memory.ts
-export interface CacheStrategy {
+export interface SyncCacheStrategy {
   get(key: TKey): Pick<CacheItem, 'value'> | null;
   set(
     key: TKey,
@@ -12,10 +11,9 @@ export interface CacheStrategy {
   ): void;
   cached(key: TKey): CacheItem | null;
   has(key: TKey): boolean;
-  delete(key: TKey): void;
+  delete(key: TKey): boolean;
   invalidateByKey(key: string | RegExp): TStrings;
   invalidate(key: string): boolean;
-  entries: IterableIterator<[string, CacheItem]>;
   reconstructMapKey(key: string): TStrings;
   getMapKey(key: TStrings): string;
   setDependencyKeys(
@@ -26,6 +24,7 @@ export interface CacheStrategy {
   snapshot(resetCurrentInvalidations?: boolean): string;
   restore(snapshotCache: string): void;
   size: number;
+  entries: IterableIterator<[string, CacheItem]>;
   keys: IterableIterator<string>;
   values: IterableIterator<CacheItem>;
 }

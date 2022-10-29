@@ -1,7 +1,7 @@
-const { KeyValueCache } = require('@cadienvan/key-value-cache');
+const { SyncKeyValueCache } = require('../dist')
 const { performance } = require('perf_hooks');
 
-var kvCache = new KeyValueCache();
+var kvCache = new SyncKeyValueCache();
 
 const asyncLongRunningOperation = async (timeInMs = 1000) => {
   return new Promise((resolve) => {

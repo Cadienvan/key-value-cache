@@ -1,5 +1,5 @@
-const { KeyValueCache } = require('@cadienvan/key-value-cache');
-var cache = new KeyValueCache();
+const { SyncKeyValueCache } = require('../dist')
+var cache = new SyncKeyValueCache();
 
 cache.set(['users'], 'USERS');
 cache.set(['users', 'users-payments', 'users-orders'], 'USERS+PAYMENTS+ORDERS');
