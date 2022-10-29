@@ -24,6 +24,6 @@ esbuild
     sourcemap: true,
     minify: true,
     platform: 'node',
-    target: ['node14.16'],
+    target: ['node14.16']
   })
   .catch(() => process.exit(1));

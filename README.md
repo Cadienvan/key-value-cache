@@ -17,30 +17,30 @@ Be warned the ESM version currently uses directory import so, in order to correc
 `node --experimental-specifier-resolution=node index.js`
 
 ```js
-import { KeyValueCache } from "@cadienvan/key-value-cache";
+import { KeyValueCache } from '@cadienvan/key-value-cache';
 const cache = new KeyValueCache();
-const users = await cache.exec(fetchUsers, "users");
+const users = await cache.exec(fetchUsers, 'users');
 cache.setDependencyKeys(
-  "users",
-  users.map(u => `user-${u.id}`)
+  'users',
+  users.map((u) => `user-${u.id}`)
 );
 await updateUser(2);
-cache.invalidateByKey("users:2");
-const users = cache.get("users"); // This will be invalidated
+cache.invalidateByKey('users:2');
+const users = cache.get('users'); // This will be invalidated
 ```
 
 ```js
-import { KeyValueCache } from "@cadienvan/key-value-cache";
+import { KeyValueCache } from '@cadienvan/key-value-cache';
 const cache = new KeyValueCache();
 const users = await fetchUsers();
-cache.set("users", users, 2); // Define a threshold of 2
-cache.setDependencyKeys("users", ["users:1", "users:2", "users:3", "users:4"]);
+cache.set('users', users, 2); // Define a threshold of 2
+cache.setDependencyKeys('users', ['users:1', 'users:2', 'users:3', 'users:4']);
 await updateUser(2);
-cache.invalidateByKey("users:2");
-const users = cache.get("users"); // This will not be invalidated as the threshold is set to 2.
+cache.invalidateByKey('users:2');
+const users = cache.get('users'); // This will not be invalidated as the threshold is set to 2.
 await updateUser(3);
-cache.invalidateByKey("users:3");
-const users = cache.get("users"); // This will be invalidated as the threshold is set to 2.
+cache.invalidateByKey('users:3');
+const users = cache.get('users'); // This will be invalidated as the threshold is set to 2.
 ```
 
 Look at the `demo` folder in the GitHub Repository in order to have some proofs of concept.
@@ -58,7 +58,7 @@ npm install @cadienvan/key-value-cache
 You can import and instance a new KeyValueCache object as follows:
 
 ```js
-import { KeyValueCache } from "@cadienvan/key-value-cache";
+import { KeyValueCache } from '@cadienvan/key-value-cache';
 const cache = new KeyValueCache();
 ```
 
@@ -86,23 +86,26 @@ In case the key is an array, it searches for a complete match in the cache.
 const cache = new KeyValueCache();
 cache.exec(() => {
   return longRunningOperation();
-}, ["longRunningOperation"]); // This will execute the function and store the result in the cache
+}, ['longRunningOperation']); // This will execute the function and store the result in the cache
 cache.exec(() => {
   return longRunningOperation();
-}, ["longRunningOperation"]); // This will return the result directly from the cache
+}, ['longRunningOperation']); // This will return the result directly from the cache
 ```
 
 If you want to store the result of an async function, just await the result.
 
 ```js
 const cache = new KeyValueCache();
-const result = await cache.exec(async () => asyncLongRunningOperation(), ["asyncLongRunningOperation"]); // This will execute the async function and store the result in the cache
+const result = await cache.exec(
+  async () => asyncLongRunningOperation(),
+  ['asyncLongRunningOperation']
+); // This will execute the async function and store the result in the cache
 ```
 
 Alternativaly, if you want to store the result of the function in the cache without executing it, you can use the `set` method and pass a straight value.
 
 ```js
-cache.set("key", "value");
+cache.set('key', 'value');
 ```
 
 # How can I retrieve an element from the cache?
@@ -114,8 +117,8 @@ If you want to retrieve the result directly from the cache, you can use the `get
 const cache = new KeyValueCache();
 cache.exec(() => {
   return longRunningOperation();
-}, ["longRunningOperation"]); // This will execute the function and store the result in the cache
-cache.get(["longRunningOperation"]); // This will return the result directly from the cache
+}, ['longRunningOperation']); // This will execute the function and store the result in the cache
+cache.get(['longRunningOperation']); // This will return the result directly from the cache
 ```
 
 # How can I define a threshold for invalidation?
@@ -125,12 +128,12 @@ When the threshold is reached, the item is invalidated.
 
 ```js
 const cache = new KeyValueCache();
-cache.set("key", "value", 2); // This will store the value in the cache and set the threshold to 2
-cache.get("key"); // This will return the value
-cache.invalidateByKey("key"); // This won't invalidate the item, but will increase the invalidation counter.
-cache.get("key"); // This will return the value
-cache.invalidateByKey("key"); // This will invalidate the item as the defined threshold of two is reached.
-cache.get("key"); // This will return undefined
+cache.set('key', 'value', 2); // This will store the value in the cache and set the threshold to 2
+cache.get('key'); // This will return the value
+cache.invalidateByKey('key'); // This won't invalidate the item, but will increase the invalidation counter.
+cache.get('key'); // This will return the value
+cache.invalidateByKey('key'); // This will invalidate the item as the defined threshold of two is reached.
+cache.get('key'); // This will return undefined
 ```
 
 Remember to use the `invalidateByKey` method to increase the invalidation counter, while the `delete` method will delete the item from the cache independently from the defined threshold.
@@ -145,10 +148,10 @@ Future updates will provide some sort of background job to invalidate the items.
 
 ```js
 const cache = new KeyValueCache();
-cache.set("key", "value", 1, [], 1000); // This will store the value in the cache and set the TTL to 1000ms
-cache.get("key"); // This will return the value
+cache.set('key', 'value', 1, [], 1000); // This will store the value in the cache and set the TTL to 1000ms
+cache.get('key'); // This will return the value
 await sleep(1000); // This will wait for 1000ms
-cache.get("key"); // This will return undefined
+cache.get('key'); // This will return undefined
 ```
 
 # What is the difference between the `invalidate` and `invalidateByKey` methods?
@@ -158,14 +161,14 @@ The second one will search both in the primary keys and in the dependency keys.
 
 ```js
 const cache = new KeyValueCache();
-cache.set("key", "value", 1, ["depKey"]); // This will store the value in the cache.
-cache.get("key"); // This will return the value
-cache.invalidate("key"); // This will invalidate the item
-cache.get("key"); // This will return undefined
-cache.set("key", "value", 1, ["depKey"]); // This will store the value in the cache.
-cache.get("key"); // This will return the value
-cache.invalidateByKey("depKey"); // This will invalidate the item
-cache.get("key"); // This will return undefined
+cache.set('key', 'value', 1, ['depKey']); // This will store the value in the cache.
+cache.get('key'); // This will return the value
+cache.invalidate('key'); // This will invalidate the item
+cache.get('key'); // This will return undefined
+cache.set('key', 'value', 1, ['depKey']); // This will store the value in the cache.
+cache.get('key'); // This will return the value
+cache.invalidateByKey('depKey'); // This will invalidate the item
+cache.get('key'); // This will return undefined
 ```
 
 # How can I define a dependency array for invalidation?
@@ -175,16 +178,16 @@ When the dependency array is defined, the item is invalidated when one of the de
 
 ```js
 const cache = new KeyValueCache();
-cache.set("key", "value", 1, ["dependency1", "dependency2"]); // This will store the value in the cache and set the threshold to 2
-cache.get("key"); // This will return the value
-cache.invalidateByKey("dependency1"); // This will invalidate the item as the dependency1 is in the dependency array.
-cache.get("key"); // This will return undefined
+cache.set('key', 'value', 1, ['dependency1', 'dependency2']); // This will store the value in the cache and set the threshold to 2
+cache.get('key'); // This will return the value
+cache.invalidateByKey('dependency1'); // This will invalidate the item as the dependency1 is in the dependency array.
+cache.get('key'); // This will return undefined
 ```
 
 You can also set the dependency array using the `setDependencies` method.
 
 ```js
-cache.setDependencies("key", ["dependency1", "dependency2"]); // This will set the dependency array for the key
+cache.setDependencies('key', ['dependency1', 'dependency2']); // This will set the dependency array for the key
 ```
 
 This could be useful when you want to firstly execute the function and use the result to set the dependencies.
@@ -194,13 +197,13 @@ This could be useful when you want to firstly execute the function and use the r
 You can remove an element from the cache by using the `delete` method.
 
 ```js
-cache.delete("key");
+cache.delete('key');
 ```
 
 If you want to invalidate every element in the cache containing a particular key, you can use the `invalidateByKey` method.
 
 ```js
-cache.invalidateByKey("key");
+cache.invalidateByKey('key');
 ```
 
 You can also pass a regex to the `invalidateByKey` method in order to invalidate every element in the cache containing a particular key.
@@ -215,7 +218,7 @@ You can invalidate multiple elements from the cache by using the `invalidateByKe
 This will call the `invalidateByKey` method for every key in the array.
 
 ```js
-cache.invalidateByKeys(["key1", "key2"]);
+cache.invalidateByKeys(['key1', 'key2']);
 ```
 
 Because of the iteration, if you invalidate two keys which are part of the same item with a threshold of two, the item will be invalidated.
@@ -233,7 +236,7 @@ cache.clear();
 Yes, you can use the `eventBus` inside the cache to listen to events.
 
 ```js
-cache.eventBus.on("onSet", key => {
+cache.eventBus.on('onSet', (key) => {
   console.log(`The key ${key} has been saved in the cache`);
 });
 ```
@@ -242,10 +245,10 @@ Please, refer to the exported `Events` enum to see the available events.
 Two commodity methods have been provided to listen to the two most common events: `onHit` and `onMiss`, providing a filter for the given key.
 
 ```js
-cache.onHit(key => {
+cache.onHit((key) => {
   console.log(`The key ${key} has been found in the cache`);
 });
-cache.onMiss(key => {
+cache.onMiss((key) => {
   console.log(`The key ${key} has not been found in the cache`);
 });
 ```
@@ -297,7 +300,7 @@ cache.forEach((value, key) => {
 You can check if an element is in the cache by using the `has` method.
 
 ```js
-cache.has("key");
+cache.has('key');
 ```
 
 # Can I make a snapshot of the cache and restore it in a later time?
