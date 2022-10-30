@@ -24,6 +24,12 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
     this.options = options;
   }
 
+  prefixKeyIfNecessary(key: string) {
+    return key.startsWith(this.options.keyPrefix)
+      ? key
+      : `${this.options.keyPrefix}${key}`;
+  }
+
   getMapKey(keys: TStrings) {
     return keys.join(this.options.keySeparator);
   }
@@ -40,7 +46,7 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
     ttl = this.DEFAULT_TTL
   ) {
     this.appCache.set(
-      `${this.options.keyPrefix}${this.getMapKey(key)}`,
+      this.prefixKeyIfNecessary(this.getMapKey(key)),
       JSON.stringify({
         value,
         threshold,
@@ -53,12 +59,31 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
     );
   }
 
+  async update(key: TStrings, modifiedData: any) {
+    let cacheDataItem = await this.cached(key);
+    if (cacheDataItem) {
+      cacheDataItem = { ...cacheDataItem, ...modifiedData };
+
+      this.appCache.set(
+        this.prefixKeyIfNecessary(this.getMapKey(key)),
+        JSON.stringify({
+          value: cacheDataItem.value,
+          threshold: cacheDataItem.threshold,
+          dependencyKeys: cacheDataItem.dependencyKeys,
+          currentInvalidations: cacheDataItem.currentInvalidations
+        }),
+        {
+          KEEPTTL: true
+        }
+      );
+    }
+  }
+
   async cached(key: TKey) {
     const response =
       (await this.appCache.get(
-        `${this.options.keyPrefix}${this.getMapKey(arraify(key))}`
+        this.prefixKeyIfNecessary(this.getMapKey(arraify(key)))
       )) || null;
-    console.log('response', response);
     return response ? JSON.parse(response) : null;
   }
 
@@ -68,11 +93,19 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
   }
 
   async has(key: TStrings) {
-    return (await this.appCache.exists(this.getMapKey(key))) > 0;
+    return (
+      (await this.appCache.exists(
+        this.prefixKeyIfNecessary(this.getMapKey(key))
+      )) > 0
+    );
   }
 
   async delete(key: TKey) {
-    return (await this.appCache.del(this.getMapKey(arraify(key)))) > 0;
+    return (
+      (await this.appCache.del(
+        this.prefixKeyIfNecessary(this.getMapKey(arraify(key)))
+      )) > 0
+    );
   }
 
   async invalidate(key: string) {
@@ -84,22 +117,19 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
     if (cacheDataItem.currentInvalidations >= cacheDataItem.threshold) {
       await this.delete(cacheKey);
     } else {
-      await this.set(
-        arraify(cacheKey),
-        cacheDataItem.value,
-        cacheDataItem.threshold
-      );
+      await this.update(arraify(cacheKey), {
+        currentInvalidations: cacheDataItem.currentInvalidations
+      });
     }
     return invalidated;
   }
   async invalidateByKey(key: string | RegExp) {
     const invalidatedKeys: Array<string> = [];
     const cache = Array.from(await this.entries());
-    console.log(cache);
 
     for (const [k, v] of cache) {
       if (key instanceof RegExp) {
-        const check = this.reconstructMapKey(k).some((_k) => key.test(_k));
+        const check = k.some((_k) => key.test(_k));
         const value = v.dependencyKeys.some((_k) => key.test(_k));
         if (check || value) {
           await this.invalidate(k);
@@ -119,9 +149,10 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
 
   async setDependencyKeys(key: TKey, dependencyKeys: TStrings) {
     const cacheDataItem = await this.cached(arraify(key));
-    if (cacheDataItem) {
-      cacheDataItem.dependencyKeys = dependencyKeys;
-    }
+    if (cacheDataItem)
+      this.update(arraify(key), {
+        dependencyKeys
+      });
   }
 
   async clear() {
@@ -170,15 +201,19 @@ export class AsyncRedisStrategy implements AsyncCacheStrategy {
   // @ts-ignore
   async entries() {
     const keys = await this.keys();
-    console.log('keys', keys);
     const entries = await Promise.all(
-      keys.map(async (key) => [key, await this.cached(key)])
+      keys.map(async (key) => [
+        this.reconstructMapKey(key),
+        await this.cached(key)
+      ])
     );
     return entries;
   }
 
   async keys() {
-    return this.appCache.keys(`${this.options.keyPrefix}*`);
+    return (await this.appCache.keys(this.prefixKeyIfNecessary('*'))).map((k) =>
+      k.replace(this.options.keyPrefix, '')
+    );
   }
 
   // @ts-ignore

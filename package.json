@@ -39,14 +39,12 @@
     "redis": "^4.3.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
-    "tsc": "^2.0.4",
     "typescript": "^4.8.4"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
       "npx prettier --write",
-      "npx eslint --fix",
-      "npx jest --no-cache"
+      "npx eslint --fix"
     ]
   },
   "repository": {
