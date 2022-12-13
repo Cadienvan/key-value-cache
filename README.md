@@ -22,7 +22,7 @@ const cache = new KeyValueCache();
 const users = await cache.exec(fetchUsers, 'users');
 cache.setDependencyKeys(
   'users',
-  users.map((u) => `user-${u.id}`)
+  users.map((u) => `users:${u.id}`)
 );
 await updateUser(2);
 cache.invalidateByKey('users:2');
